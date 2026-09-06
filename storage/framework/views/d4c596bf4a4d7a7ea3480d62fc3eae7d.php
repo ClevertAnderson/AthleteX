@@ -14,75 +14,76 @@
         </div>
     </div>
 
-    <div class="flex items-end space-x-2 p-4">
-        <div class="">
-            <label class=" text-gray-700 font-medium mb-1" for="search">Search</label>
-            <input type="text" id="search" name="search" placeholder="Enter full name"
-                class="w-64 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
-                autocomplete="off">
-            <div id="searchResults" class="mt-2 w-64 bg-white border border-gray-200 rounded shadow-sm hidden"></div>
+    <!-- Search & Action Buttons Spacing -->
+    <div class="flex flex-wrap items-center justify-start w-full p-4 gap-4">
+        
+        <!-- Search Section -->
+        <div class="flex items-center space-x-2">
+            <label class="text-gray-700 font-medium whitespace-nowrap" for="search">Search</label>
+            <div class="relative">
+                <input type="text" id="search" name="search" placeholder="Enter full name"
+                    class="w-64 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                    autocomplete="off">
+                <!-- Dropdown -->
+                <div id="searchResults" class="absolute top-full left-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded shadow-xl hidden max-h-60 overflow-y-auto"></div>
+            </div>
         </div>
-        <div class="flex justify-center space-x-2 mt-4">
-            <!-- 🚀 NEW: Add New Athlete Button -->
-            <button id="addNewBtn" type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer">
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+            <button id="addNewBtn" type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
                 + Add New Athlete
             </button>
 
-            <button id="saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer">
+            <button id="saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm">
                 Save Athlete
             </button>
 
-            <!-- 🚀 Edit Button -->
-            <button id="editBtn" type="button" class="hidden px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer">
+            <button id="editBtn" type="button" class="hidden px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer shadow-sm">
                 Edit Athlete
             </button>
 
-            <button id="updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer">
+            <button id="updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
                 Update Athlete
             </button>
 
-            <button id="cancelBtn" type="button" onclick="clearAthleteData()" class="hidden px-4 py-2 rounded bg-gray-300 text-gray-800 hover:bg-gray-400 transition cursor-pointer">
+            <button id="cancelBtn" type="button" onclick="clearAthleteData()" class="hidden px-5 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition cursor-pointer font-medium shadow-sm border border-gray-300">
                 Cancel
             </button>
         </div>
     </div>
 
+    <!-- TABS NAVIGATION -->
     <nav class="mb-6 w-full overflow-x-auto h-8">
             <ul class="flex space-x-2 min-w-max">
-                <li>
+                <li id="tab-general-info">
                     <a href="#general-info" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
                         General Information
                     </a>
                 </li>
-                <li>
+                <li id="tab-achievements">
                     <a href="#achievements" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
                         Achievements
                     </a>
                 </li>
-                <li>
+                <li id="tab-academic-evaluation">
                     <a href="#academic-evolution" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
                         Academic Evaluation
                     </a>
                 </li>
-                <li>
+                <li id="tab-fees-discounts">
                     <a href="#fees-discounts" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
                         Fees and Discounts
                     </a>
                 </li>
-                <li>
+                <li id="tab-work-history">
                     <a href="#work-history" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
                         Work History
-                    </a>
-                </li>
-                <li>
-                    <a href="#student-id" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
-                        Student ID
                     </a>
                 </li>
             </ul>
@@ -94,13 +95,14 @@
 
         <div id="general-info" class="tab-pane">
             <div class="flex items-stretch gap-6">
-                <form id="athleteForm" method="POST" action="<?php echo e(route('athletes.store')); ?>" class="student-form flex items-stretch gap-6 w-full" autocomplete="off">
+                <form id="athleteForm" method="POST" action="<?php echo e(route('athletes.store')); ?>" class="student-form flex items-stretch gap-6 w-full" autocomplete="off" enctype="multipart/form-data">
                     <?php echo csrf_field(); ?>
 
                     <input type="hidden" name="_method" id="_method" value="POST">
                     <input type="hidden" name="selected_athlete_id" id="selected_athlete_id" value="">
 
-                    <div class="gap-4 mb-6">
+                    <!-- LEFT SIDE: Main Form -->
+                    <div class="flex-1 gap-4 mb-6">
 
                         <div class="grid grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
@@ -117,32 +119,30 @@
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
                             <div class="flex flex-col w-full">
-                            <div class="flex items-center">
-                                <label for="student_id" class="w-1/3 text-gray-700 font-medium">Student ID</label>
-                                <input type="text" id="student_id" name="student_id" placeholder="XX-XXXX-XXX"
-                                    oninput="formatStudentID(this)" maxlength="11"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 font-mono tracking-wider">
+                                <div class="flex items-center">
+                                    <label for="student_id" class="w-1/3 text-gray-700 font-medium">Student ID</label>
+                                    <input type="text" id="student_id" name="student_id" placeholder="XX-XXXX-XXX"
+                                        oninput="formatStudentID(this)" maxlength="11"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 font-mono tracking-wider">
+                                </div>
+                                <div class="flex justify-end">
+                                    <span id="studentIdError" class="text-red-500 text-xs hidden w-2/3 text-left mt-1 font-bold">
+                                        ⚠️ Format must be XX-XXXX-XXX (11 characters)
+                                    </span>
+                                </div>
                             </div>
-                            <div class="flex justify-end">
-                                <span id="studentIdError" class="text-red-500 text-xs hidden w-2/3 text-left mt-1 font-bold">
-                                    ⚠️ Format must be XX-XXXX-XXX (11 characters)
-                                </span>
-                            </div>
-                        </div>
                         </div>
 
                         <div class="grid grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                             <label class="w-1/3 text-gray-700 font-medium">Gender</label>
-
                             <select id="gender" name="gender"
                                 class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
-                                <option value="Select Gender">Select Gender</option>
+                                <option value="">Select Gender</option>
                                 <option value="Male">Male</option>
                                 <option value="Female">Female</option>
                             </select>
                         </div>
-
 
                             <div class="flex items-center">
                                 <label class="w-1/3 text-gray-700 font-medium">Birthdate</label>
@@ -195,7 +195,7 @@
                             <div class="flex items-center">
                                 <label for="marital_status" class="w-1/3 text-gray-700 font-medium">Marital Status</label>
                                 <select id="marital_status" name="marital_status"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">>
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
                                     <option value="Select Marital Status">Select Marital Status</option>
                                     <option value="Single">Single</option>
                                     <option value="Married">Married</option>
@@ -249,7 +249,6 @@
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
                         <div class="grid grid-cols-2 gap-4 mb-4">
-
                             <div class="flex items-center gap-2">
                                 <label for="emergency_person" class="w-24 text-gray-700 font-medium">
                                     Emergency Contact Person
@@ -273,9 +272,7 @@
                                     class="contact-number flex-1 border border-gray-300 rounded px-3 py-2 
                                         focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
-
                         </div>
-
 
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
@@ -378,7 +375,7 @@
 
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
-                        <!-- Polished Working Student / Trabaho Dati section -->
+                        <!-- Working Student Section -->
                         <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-50 p-4 rounded border border-gray-200 shadow-sm">
                             <div class="col-span-2 mb-1 border-b pb-2">
                                 <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wider">
@@ -398,16 +395,14 @@
                             </div>
                         </div>
 
-
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
                     </div>
 
-                    <div class="w-1/4 flex flex-col">
-
+                    <!-- RIGHT SIDE WRAPPER -->
+                    <div class="w-[350px] flex-shrink-0 flex flex-col">
                         <div class="bg-gray-100 rounded-lg p-4 shadow-inner flex flex-col h-full">
-
                             <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">  
-                                <span id="selected_name" class="mt-2 text-gray-800 font-semibold">
+                                <span id="selected_name" class="mt-2 text-gray-800 font-semibold text-center">
                                     <?php echo e($selectedAthlete->full_name ?? 'No athlete selected'); ?>
 
                                 </span>
@@ -420,10 +415,10 @@
                                 </div>
                             </div>
 
-                            <div class="space-y-3 flex-1">
+                            <div class="space-y-3 flex-1 w-full">
                                 <div class="flex items-center">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Sports Event</label>
-                                    <select name="sport_event" class="form-select" required>
+                                    <select name="sport_event" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
                                         <option value="">Select Sport...</option>
                                         <?php $__currentLoopData = \App\Models\Sport::orderBy('name', 'asc')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sport): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <option value="<?php echo e(str_replace(' ', '_', $sport->name)); ?>">
@@ -436,7 +431,7 @@
 
                                 <div class="flex items-center mt-2">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Status</label>
-                                    <select name="status" class="w-2/3 bg-blue-100 border border-gray-300 rounded px-2 py-1">
+                                    <select name="status" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
                                         <option value="">-- Select Status --</option>
                                         <option value="Active">Active</option>
                                         <option value="Inactive">Inactive</option>
@@ -447,7 +442,7 @@
 
                                 <div class="flex items-center mt-2">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Classification</label>
-                                    <select name="classification" class="w-2/3 bg-blue-100 border border-gray-300 rounded px-2 py-1">
+                                    <select name="classification" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
                                         <option value="">-- Select Classification --</option>
                                         <option value="Class_A">Class A</option>
                                         <option value="Class_B">Class B</option>
@@ -456,13 +451,11 @@
                                 </div>
 
                                 <div class="flex justify-between mt-6">
-                                    <input type="file" id="pictureInput" accept="image/*" class="hidden">
-
+                                    <input type="file" id="pictureInput" name="athlete_picture" accept="image/*" class="hidden">
                                     <button type="button" id="addPictureBtn"
                                         class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
                                         <i class="bi bi-person-plus"></i> Add Picture
                                     </button>
-
                                     <button type="button" id="clearPictureBtn"
                                         class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
                                         <i class="bi bi-person-x"></i> Clear Picture
@@ -471,48 +464,31 @@
 
                                 <div class="flex items-center mt-4">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Date Inactive</label>
-                                    <input type="date" name="inactive_date" class="w-2/3 border border-gray-300 rounded px-2 py-1" autocomplete="off">
+                                    <input type="date" name="inactive_date" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" autocomplete="off">
                                 </div>
 
-                                <!-- PRINT BUTTON (Hidden by default, shows when athlete is selected) -->
+                                <!-- PRINT BUTTON -->
                                 <button type="button" id="printBtn" onclick="printAthlete()" 
                                     class="hidden w-full mt-6 bg-green-700 text-white font-bold rounded px-3 py-2 shadow hover:bg-green-800 transition flex justify-center items-center gap-2">
                                     🖨️ Print Athlete Record
                                 </button>
-                                
                             </div>
-
                         </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-            <div id="tab-content" >
-                <div class="bg-white p-6 flex items-center justify-between">
-                    <div class="flex-1">
-                        <p class="text-3xl font-bold text-gray-800 mb-0">Notes</p>
-                        <hr class="border-t-2 border-gray-400 my-2  w-[100%]">
-                        <textarea type="text" class="w-2/3 border border-gray-300 rounded px-2 py-1 h-52 w-full" autocomplete="off"></textarea>
                     </div>
-                </div>
+                </form>
             </div>
-
         </div>
 
+        <!-- Achievements Tab -->
         <div id="achievements" class="tab-pane hidden">
             <div class="space-y-6">
-
                 <div class="bg-white p-6 shadow flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-800">🏅 Achievements</h1>
-
                     <button onclick="toggleAchievementModal(true)"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
                         + Add Achievement
                     </button>
                 </div>
-
                 <div class="bg-white rounded-lg shadow overflow-hidden">
                     <table id="achievementsTable" class="min-w-full text-sm text-left">
                         <thead class="bg-green-600 text-white text-center">
@@ -526,80 +502,22 @@
                                 <th class="px-6 py-3 font-medium">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="achievementsTableBody">
-                            
-                        </tbody>
+                        <tbody id="achievementsTableBody"></tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-                <div id="AchievementModal" class="hidden fixed inset-0  flex items-center justify-center z-50">
-                    <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative">
-                        
-                        <button onclick="toggleAchievementModal(false)" 
-                                class="absolute top-3 right-3 text-white hover:text-grey-700">
-                            ✕
-                        </button>
-                        
-                        <h2 class="text-2xl font-semibold text-white text-center mb-4">Add Achievement</h2>
-                        <form id="achievementForm">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="year" class="block text-sm font-medium text-white mb-1">Year</label>
-                                    <input type="text" id="year" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                </div>
-                                <div>
-                                    <label for="Month-Day" class="block text-sm font-medium text-white mb-1">Month-Day</label>
-                                    <input type="text" id="month_day" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                </div>
-                                <div>
-                                    <label for="event" class="block text-sm font-medium text-white mb-1">Sports Event</label>
-                                    <input type="text" id="event" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                </div>
-                                <div>
-                                    <label for="venue" class="block text-sm font-medium text-white mb-1">Venue</label>
-                                    <input type="text" id="venue" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                </div>
-                                <div>
-                                    <label for="award" class="block text-sm font-medium text-white mb-1">Award</label>
-                                    <select id="award" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                        <option value="">Select Award</option>
-                                        <option value="Gold">Gold</option>
-                                        <option value="Silver">Silver</option>
-                                        <option value="Bronze">Bronze</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="category" class="block text-sm font-medium text-white mb-1">Category</label>
-                                    <input type="text" id="category" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none">
-                                </div>
-                                <div class="mt-4">
-                                    <label for="remarks" class="block text-sm font-medium text-white mb-1">Remarks</label>
-                                    <textarea id="remarks" class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-green-600 outline-none"></textarea>
-                                </div>
-                            </div>
-                            <button type="submit" class="bg-green-600 text-white w-full py-2 rounded-lg hover:bg-green-700">
-                                Save Achievement
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-        </div> 
-
+        <!-- Academic Evaluation Tab -->
         <div id="academic-evolution" class="tab-pane hidden">
             <div class="space-y-6">
-
                 <div class="bg-white p-6 shadow flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-800">Academic Evaluation</h1>
-
                     <button onclick="toggleAcademicModal(true)"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
                         + Add Record
                     </button>
                 </div>
-
                 <div>
                     <table class="w-full text-left">
                         <thead class="bg-green-600 text-white text-center">
@@ -610,189 +528,114 @@
                                 <th class="py-3">Remarks</th>
                             </tr>
                         </thead>
-
-                        <tbody id="gradesTable" class="text-gray-700">
-                            
-                        </tbody>
+                        <tbody id="gradesTable" class="text-gray-700"></tbody>
                     </table>
                 </div>
-
             </div>
+        </div>
 
-            <div id="academicModal" 
-                class="hidden fixed inset-0  flex items-center justify-center z-50">
-
-                <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative">
-
-                    <button onclick="toggleAcademicModal(false)" 
-                            class="absolute top-3 right-3 text-white hover:text-red-700">
-                        ✕
-                    </button>
-
-                    <h2 class="text-xl font-bold mb-4 text-white">Add Academic Record</h2>
-
-                    <form id="academicForm" class="space-y-4">
-
-                        <div>
-                            <label class="text-white font-medium">Units Passed</label>
-                            <input type="number" class="w-full border rounded px-3 py-2" 
-                                name="Passed" placeholder="Units Passed">
-                        </div>
-
-                        <div>
-                            <label class="text-white font-medium">Units enrolled</label>
-                            <input type="number" class="w-full border rounded px-3 py-2" 
-                                step="0.01" name="enrolled" placeholder="Enter Units Enrolled">
-                        </div>
-
-                        <div>
-                            <label class="text-white font-medium">Percentage</label>
-                            <input type="text" class="w-full border rounded px-3 py-2" 
-                                name="percentage" placeholder="Enter Percentage">
-                        </div>
-
-                        <div>
-                            <label class="text-white font-medium">Remark</label>
-                            <select name="remark" class="w-full border rounded px-3 py-2">
-                                <option value="">Select</option>
-                                <option>Passed</option>
-                                <option>Failed</option>
-                                <option>Incomplete</option>
-                                <option>Dropped</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="bg-green-600 text-white w-full py-2 rounded-lg hover:bg-green-700">
-                            Save Record
-                        </button>
-
-                    </form> 
-
-                </div> 
-
-            </div> 
-
-        </div> 
-
-
+        <!-- Fees and Discounts Tab -->
         <div id="fees-discounts" class="tab-pane hidden">
             <div class="bg-white rounded-lg shadow p-4">
                <div class="bg-white p-6 shadow flex items-center justify-between">
                     <h1 class="text-2xl font-bold text-gray-800">Fees and Discounts</h1>
-
                     <button onclick="toggleFeeModal(true)"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
                         + Add Fee / Discount
                     </button>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="min-w-full border border-gray-300 text-sm text-gray-700">
                         <thead class="bg-green-600 text-white text-center">
                             <tr>
-                                <th class="border border-gray-300 px-4 py-2 ">Academic Term and Year</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Total Units Enrolled</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Tuition Fee</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Miscellaneous Fee</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Other Charges</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Total Assessment</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Total Discount</th>
-                                <th class="border border-gray-300 px-4 py-2 ">Remarks</th>
+                                <th class="border border-gray-300 px-4 py-2">Academic Term and Year</th>
+                                <th class="border border-gray-300 px-4 py-2">Total Units Enrolled</th>
+                                <th class="border border-gray-300 px-4 py-2">Tuition Fee</th>
+                                <th class="border border-gray-300 px-4 py-2">Miscellaneous Fee</th>
+                                <th class="border border-gray-300 px-4 py-2">Other Charges</th>
+                                <th class="border border-gray-300 px-4 py-2">Total Assessment</th>
+                                <th class="border border-gray-300 px-4 py-2">Total Discount</th>
+                                <th class="border border-gray-300 px-4 py-2">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="fees-discounts-table-body">
-                            
-                        </tbody>
+                        <tbody id="fees-discounts-table-body"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div id="feeModal" 
-                class="hidden fixed inset-0  flex items-center justify-center z-50">
+            <!-- FEE MODAL -->
+            <div id="feeModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
+                    <button type="button" onclick="toggleFeeModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Fee / Discount</h2>
 
-                <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative">
-
-                    <button type="button" onclick="toggleFeeModal(false)" 
-                            class="absolute top-3 right-3 text-white hover:text-white">
-                        ✕
-                    </button>
-
-                    <h2 class="text-xl font-bold mb-4 text-center text-white">Add Fee / Discount</h2>
-
-                    <form id="feeForm" class="grid grid-cols-2 gap-4">
-
-    <div class="col-start-2">
-        <label class="text-white font-medium">Academic Term and Year</label>
-        <input type="text" name="academic_year" placeholder="Ex: 2025-2026"
-            class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-1">
-        <label class="text-white font-medium">Total Units Enrolled</label>
-        <input type="number" name="total_units" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-2">
-        <label class="text-white font-medium">Tuition Fee</label>
-        <input type="number" name="tuition_fee" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-1">
-        <label class="text-white font-medium">Miscellaneous Fee</label>
-        <input type="number" name="miscellaneous_fee" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-2">
-        <label class="text-white font-medium">Other Charges</label>
-        <input type="number" name="other_charges" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-1">
-        <label class="text-white font-medium">Total Assessment</label>
-        <input type="number" name="total_assessment" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-2">
-        <label class="text-white font-medium">Total Discount</label>
-        <input type="number" name="total_discount" class="w-full border rounded px-3 py-2">
-    </div>
-
-    <div class="col-start-1">
-        <label class="text-white font-medium">Remarks</label>
-        <select name="remarks" class="w-full border rounded px-3 py-2">
-            <option value="">Select</option>
-            <option>Paid</option>
-            <option>Pending</option>
-            <option>Waived</option>
-        </select>
-    </div>
-
-    <!-- Full width button -->
-    <div class="col-span-2">
-        <button type="submit" 
-            class="bg-green-600 text-white w-full py-2 rounded-lg hover:bg-green-700">
-            Save Record
-        </button>
-    </div>
-
-</form>
-
+                    <form id="feeForm" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Academic Term/Year</label>
+                                <input type="text" name="academic_year" placeholder="Ex: 2025-2026" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Total Units Enrolled</label>
+                                <input type="number" name="total_units" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Tuition Fee</label>
+                                <input type="number" name="tuition_fee" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Miscellaneous Fee</label>
+                                <input type="number" name="miscellaneous_fee" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Other Charges</label>
+                                <input type="number" name="other_charges" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Total Assessment</label>
+                                <input type="number" name="total_assessment" placeholder="0.00" class="w-full bg-gray-200 text-gray-900 border border-gray-400 rounded px-3 py-2 text-sm focus:outline-none font-bold" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Total Discount</label>
+                                <input type="number" name="total_discount" placeholder="0.00" class="w-full bg-gray-200 text-gray-900 border border-gray-400 rounded px-3 py-2 text-sm focus:outline-none font-bold" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-white font-medium mb-1 text-sm">Classification</label>
+                                <select name="classification" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                    <option value="">-- Select Classification --</option>
+                                    <option value="Class_A">Class A (100% Discount)</option>
+                                    <option value="Class_B">Class B (75% Discount)</option>
+                                    <option value="Class_C">Class C (50% Discount)</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
+                                <select name="remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                    <option value="">Select Status</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Waived">Waived</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                            Save Record
+                        </button>
+                    </form>
                 </div>
             </div>
-
         </div>
 
+        <!-- Work History Tab -->
         <div id="work-history" class="tab-pane hidden">
             <div class="bg-white rounded-lg shadow p-4">
                 <div class="bg-white p-6 shadow flex items-center justify-between border-b-4 border-green-600">
                     <h1 class="text-2xl font-bold text-gray-800"><i class="bi bi-person-workspace text-green-700 me-2"></i> Work History</h1>
-
                     <button onclick="toggleWorkModal(true)"
                         class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow font-semibold">
                         + Add Work Record
                     </button>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="min-w-full border border-gray-300 text-sm text-gray-700 mt-4">
                         <thead class="bg-gray-100 text-gray-700 text-center uppercase tracking-wider text-xs">
@@ -804,113 +647,48 @@
                                 <th class="border px-4 py-3">Status / Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="workTable" class="text-gray-700 text-center">
-                            
-                        </tbody>
+                        <tbody id="workTable" class="text-gray-700 text-center"></tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div id="workModal" 
-                class="hidden fixed inset-0  flex items-center justify-center z-50">
+    </div>
 
-                <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative">
-
-                    <button type="button" onclick="toggleWorkModal(false)" 
-                            class="absolute top-3 right-3 text-white hover:text-white">
-                        ✕
+    <!-- PRINT PREVIEW MODAL -->
+    <div id="printModal" class="hidden items-center justify-center p-4" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85); z-index: 999999 !important;">
+        <div class="bg-gray-300 rounded-xl shadow-2xl flex flex-col relative overflow-hidden border-4 border-green-700" style="width: 100%; max-width: 1000px; height: 90vh;">
+            <div class="bg-green-700 text-white px-6 py-4 flex justify-between items-center z-10 shadow-md">
+                <h2 class="text-xl font-bold tracking-wide">🖨️ Document Print Preview</h2>
+                <div class="space-x-3">
+                    <button onclick="triggerIframePrint()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded font-bold shadow transition border border-blue-400">
+                        Print Document
                     </button>
-
-                    <h2 class="text-xl font-bold mb-4 text-center text-white">Add Work History</h2>
-
-                    <form id="workForm" class="space-y-4">
-
-                        
-                        <div>
-                            <label class="text-white font-medium">Year</label>
-                            <input type="text" name="year" placeholder="Ex: 2025"
-                                class="w-full border rounded px-3 py-2">
-                        </div>
-
-                        
-                        <div>
-                            <label class="text-white font-medium">Date</label>
-                            <input type="date" name="date" class="w-full border rounded px-3 py-2">
-                        </div>
-
-                        
-                        <div>
-                            <label class="text-white font-medium">Work Position</label>
-                            <input type="text" name="position" placeholder="Ex: Coach"
-                                class="w-full border rounded px-3 py-2">
-                        </div>
-
-                        
-                        <div>
-                            <label class="text-white font-medium">Name of Company</label>
-                            <input type="text" name="company" placeholder="Ex: ABC Sports Academy"
-                                class="w-full border rounded px-3 py-2">
-                        </div>
-
-                        
-                        <div>
-                            <label class="text-white font-medium">Remarks</label>
-                            <select name="remarks" class="w-full border rounded px-3 py-2">
-                                <option value="">Select</option>
-                                <option>Active</option>
-                                <option>Resigned</option>
-                                <option>Retired</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-
-                        
-                        <button type="submit" 
-                            class="bg-green-600 text-white w-full py-2 rounded-lg hover:bg-green-700">
-                            Save Record
-                        </button>
-
-                    </form>
-
+                    <button onclick="togglePrintModal(false)" class="bg-gray-600 hover:bg-gray-500 text-white px-5 py-2 rounded font-bold shadow transition border border-gray-400">
+                        Close
+                    </button>
                 </div>
             </div>
-
-        </div>
-        <div id="student-id" class="tab-pane hidden">
-            <p>Students ID content goes here...</p>
-        </div>
-
-        <!-- PRINT PREVIEW MODAL (TELEPORTED) -->
-        <div id="printModal" class="hidden items-center justify-center p-4" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85); z-index: 999999 !important;">
-            <div class="bg-gray-300 rounded-xl shadow-2xl flex flex-col relative overflow-hidden border-4 border-green-700" style="width: 100%; max-width: 1000px; height: 90vh;">
-                
-                <!-- Modal Header -->
-                <div class="bg-green-700 text-white px-6 py-4 flex justify-between items-center z-10 shadow-md">
-                    <h2 class="text-xl font-bold tracking-wide">🖨️ Document Print Preview</h2>
-                    <div class="space-x-3">
-                        <button onclick="triggerIframePrint()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded font-bold shadow transition border border-blue-400">
-                            Print Document
-                        </button>
-                        <button onclick="togglePrintModal(false)" class="bg-gray-600 hover:bg-gray-500 text-white px-5 py-2 rounded font-bold shadow transition border border-gray-400">
-                            Close
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Iframe Container -->
-                <div class="flex-1 w-full bg-gray-500 p-6 flex justify-center relative shadow-inner" style="overflow-y: auto;">
-                    <iframe id="printIframe" class="bg-white shadow-2xl border border-gray-300 rounded-sm" style="width: 100%; max-width: 8.5in; height: 100%; min-height: 11in;" src=""></iframe>
-                </div>
-
+            <div class="flex-1 w-full bg-gray-500 p-6 flex justify-center relative shadow-inner" style="overflow-y: auto;">
+                <iframe id="printIframe" class="bg-white shadow-2xl border border-gray-300 rounded-sm" style="width: 100%; max-width: 8.5in; height: 100%; min-height: 11in;" src=""></iframe>
             </div>
         </div>
+    </div>
     
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     
-    // -----------------------
-    // 1. TAB SWITCHING (Loaded first so it never breaks!)
-    // -----------------------
+    const byId = id => document.getElementById(id);
+    const q = sel => document.querySelector(sel);
+
+    window.newAthleteData = { generalInfo: {}, achievements: [], academicRecords: [], fees: [], workHistory: [] };
+
+    const getAchievementsTbody = () => byId('achievementsTableBody') || q('#achievements table tbody');
+    const getGradesTbody = () => byId('gradesTable') || q('#academic-evolution table tbody');
+    const getFeesTbody = () => byId('fees-discounts-table-body') || q('#fees-discounts table tbody');
+    const getWorkTbody = () => byId('workTable') || q('#work-history table tbody');
+
+    // TAB SWITCHING
     const tabs = document.querySelectorAll('.tab-link');
     const contents = document.querySelectorAll('.tab-pane');    
 
@@ -935,28 +713,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // -----------------------
-    // 2. HELPERS & GLOBALS
-    // -----------------------
-    const byId = id => document.getElementById(id);
-    const q = sel => document.querySelector(sel);
+    // 🚀 NEW LOGIC: Dynamic Profile Hiding
+    function setTabsForActive() {
+        if(byId('tab-achievements')) byId('tab-achievements').style.display = 'block';
+        if(byId('tab-academic-evaluation')) byId('tab-academic-evaluation').style.display = 'block';
+        if(byId('tab-fees-discounts')) byId('tab-fees-discounts').style.display = 'block';
+        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'none'; // Hide Work History
 
-    // -----------------------
-    // STUDENT ID AUTO-FORMATTER
-    // -----------------------
+        // Force user to general info tab if they were stuck on a hidden tab
+        const workHistoryPane = byId('work-history');
+        if(workHistoryPane && !workHistoryPane.classList.contains('hidden')) {
+            const generalTab = document.querySelector('.tab-link[href="#general-info"]');
+            if(generalTab) generalTab.click();
+        }
+    }
+
+    function setTabsForInactive() {
+        if(byId('tab-achievements')) byId('tab-achievements').style.display = 'block';
+        if(byId('tab-academic-evaluation')) byId('tab-academic-evaluation').style.display = 'none';
+        if(byId('tab-fees-discounts')) byId('tab-fees-discounts').style.display = 'none';
+        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'block'; // Show Work History
+
+        // Force user to general info tab if they were stuck on a hidden tab
+        const acadPane = byId('academic-evolution');
+        const feesPane = byId('fees-discounts');
+        if((acadPane && !acadPane.classList.contains('hidden')) || (feesPane && !feesPane.classList.contains('hidden'))) {
+            const generalTab = document.querySelector('.tab-link[href="#general-info"]');
+            if(generalTab) generalTab.click();
+        }
+    }
+
     window.formatStudentID = function(input) {
-        // Strip everything except numbers
         let val = input.value.replace(/\D/g, ''); 
-        
-        // Auto inject dashes
         if (val.length > 2) val = val.slice(0, 2) + '-' + val.slice(2);
         if (val.length > 7) val = val.slice(0, 7) + '-' + val.slice(7);
         input.value = val;
-        
-        // Validation check
         const err = document.getElementById('studentIdError');
         if (err) {
-            // Show error if they stopped typing but it's not complete
             if (val.length > 0 && val.length < 11) {
                 err.classList.remove('hidden');
                 input.classList.add('border-red-500', 'ring-red-500');
@@ -967,21 +760,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const getAchievementsTbody = () => byId('achievementsTableBody') || q('#achievements table tbody');
-    const getGradesTbody = () => byId('gradesTable') || q('#academic-evolution table tbody');
-    const getFeesTbody = () => byId('fees-discounts-table-body') || q('#fees-discounts table tbody');
-    const getWorkTbody = () => byId('workTable') || q('#work-history table tbody');
-
-    window.newAthleteData = { generalInfo: {}, achievements: [], academicRecords: [], fees: [], workHistory: [] };
-
-    const coachDisplayEl = byId('coachDisplay');
-    const coachInputEl = byId('coach_id_input');
-    window.initialCoachId = coachInputEl ? coachInputEl.value : '';
-    window.initialCoachName = coachDisplayEl ? coachDisplayEl.textContent.trim() : '';
-
-    // -----------------------
-    // 3. LOCK/UNLOCK LOGIC
-    // -----------------------
     function lockFormInitial() {
         const form = byId('athleteForm');
         if (form) {
@@ -994,6 +772,8 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('editBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.add('hidden');
         byId('cancelBtn')?.classList.add('hidden');
+        
+        setTabsForActive(); // Show default tabs when empty
     }
 
     function unlockFormForNew() {
@@ -1008,6 +788,8 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('editBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.add('hidden');
         byId('cancelBtn')?.classList.remove('hidden');
+
+        setTabsForActive(); // Only Work History is hidden for new athletes
     }
 
     function lockFormForViewing() {
@@ -1037,65 +819,60 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('cancelBtn')?.classList.remove('hidden');
     }
 
-    // Trigger initial lock!
+    window.clearAthleteData = function() {
+        const form = byId('athleteForm');
+        if (form) {
+            form.reset();
+            form.setAttribute('action', '<?php echo e(route('athletes.store')); ?>');
+            if(byId('_method')) byId('_method').value = 'POST';
+            if(byId('selected_athlete_id')) byId('selected_athlete_id').value = '';
+        }
+        if(byId('search')) byId('search').value = '';
+        if(byId('selected_name')) byId('selected_name').textContent = 'No athlete selected';
+        if(byId('coachDisplay')) byId('coachDisplay').textContent = 'No coach assigned';
+        if(byId('picturePreview')) byId('picturePreview').classList.add('hidden');
+        if(byId('noPictureText')) byId('noPictureText').classList.remove('hidden');
+        
+        if(getAchievementsTbody()) getAchievementsTbody().innerHTML = '';
+        if(getGradesTbody()) getGradesTbody().innerHTML = '';
+        if(getFeesTbody()) getFeesTbody().innerHTML = '';
+        if(getWorkTbody()) getWorkTbody().innerHTML = '';
+
+        window.newAthleteData = { generalInfo: {}, achievements: [], academicRecords: [], fees: [], workHistory: [] };
+        byId('printBtn')?.classList.add('hidden');
+        lockFormInitial(); // Will also reset the tabs
+    };
+
     lockFormInitial();
 
-    // -----------------------
-    // 4. BUTTON LISTENERS
-    // -----------------------
     byId('addNewBtn')?.addEventListener('click', unlockFormForNew);
     byId('editBtn')?.addEventListener('click', unlockFormForEditing);
     
-    // Wire up the Cancel Button dynamically
-    byId('cancelBtn')?.addEventListener('click', () => {
-        const form = byId('athleteForm');
-        if (form) form.reset();
-        
-        if (byId('_method')) byId('_method').value = 'POST';
-        if (byId('selected_athlete_id')) byId('selected_athlete_id').value = '';
-        if (byId('search')) byId('search').value = '';
-        
-        const selectedName = byId('selected_name');
-        if (selectedName) selectedName.textContent = 'No athlete selected';
-
-        if (window.initialCoachId) {
-            if (coachDisplayEl) coachDisplayEl.textContent = window.initialCoachName || 'No coach assigned';
-            if (coachInputEl) coachInputEl.value = window.initialCoachId;
-        } else {
-            if (coachDisplayEl) coachDisplayEl.textContent = 'No coach assigned';
-            if (coachInputEl) coachInputEl.value = '';
-        }
-
+    byId('addPictureBtn')?.addEventListener('click', () => byId('pictureInput')?.click());
+    byId('clearPictureBtn')?.addEventListener('click', () => {
+        const fileInput = byId('pictureInput');
         const preview = byId('picturePreview');
         const noPic = byId('noPictureText');
+        if (fileInput) fileInput.value = '';
         if (preview) { preview.src = ''; preview.classList.add('hidden'); }
         if (noPic) noPic.classList.remove('hidden');
-
-        byId('printBtn')?.classList.add('hidden');
-
-        if (getAchievementsTbody()) getAchievementsTbody().innerHTML = '';
-        if (getGradesTbody()) getGradesTbody().innerHTML = '';
-        if (getFeesTbody()) getFeesTbody().innerHTML = '';
-        if (getWorkTbody()) getWorkTbody().innerHTML = '';
-
-        window.newAthleteData = { generalInfo: {}, achievements: [], academicRecords: [], fees: [], workHistory: [] };
-
-        // Lock it all back up to initial state!
-        lockFormInitial();
     });
 
-    // -----------------------
-    // 5. LOAD ATHLETE DATA
-    // -----------------------
+    byId('pictureInput')?.addEventListener('change', (e) => {
+        if(e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const preview = byId('picturePreview');
+                const noPic = byId('noPictureText');
+                if (preview) { preview.src = ev.target.result; preview.classList.remove('hidden'); }
+                if (noPic) noPic.classList.add('hidden');
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
     const updateBase = '<?php echo e(url('/athletes')); ?>';
     const generalForm = byId('athleteForm');
-    
-    function collectGeneralInfo() {
-        if (!generalForm) return;
-        generalForm.querySelectorAll('input[name], select[name], textarea[name]').forEach(input => {
-            newAthleteData.generalInfo[input.name] = input.value;
-        });
-    }
 
     window.loadAthleteData = function(id) {
         if (!generalForm) return;
@@ -1109,6 +886,17 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(r => r.json())
             .then(full => {
                 lockFormForViewing();
+
+                const status = full.status ? full.status.toLowerCase() : '';
+                const classification = full.classification ? full.classification.toLowerCase() : '';
+                const isInactiveOrAlumni = status !== 'active' || classification === 'alumni' || classification === 'class_alumni';
+
+                // 🚀 Toggle Tabs dynamically based on data
+                if (isInactiveOrAlumni) {
+                    setTabsForInactive();
+                } else {
+                    setTabsForActive();
+                }
 
                 for (const key in full) {
                     try {
@@ -1145,13 +933,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const selectedName = byId('selected_name');
                 if (selectedName) selectedName.textContent = full.full_name || full.first_name + ' ' + full.last_name;
 
+                const coachDisplayEl = byId('coachDisplay');
                 if (coachDisplayEl) {
                     let coachName = full.coach_name || (full.coach ? `${full.coach.coach_first_name || ''} ${full.coach.coach_last_name || ''}`.trim() : '');
                     coachDisplayEl.textContent = coachName || 'No coach assigned';
                 }
-                if (coachInputEl && full.coach_id) coachInputEl.value = full.coach_id;
 
-                // POPULATE TABLES
                 newAthleteData.achievements = full.achievements || [];
                 const achTbody = getAchievementsTbody();
                 if(achTbody) {
@@ -1175,7 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(feesTbody) {
                     feesTbody.innerHTML = '';
                     newAthleteData.fees.forEach((f, idx) => {
-                        feesTbody.innerHTML += `<tr class="text-center ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"><td class="border px-4 py-2">${f.academic_year || ''}</td><td class="border px-4 py-2">${f.total_units || ''}</td><td class="border px-4 py-2">${f.tuition_fee || ''}</td><td class="border px-4 py-2">${f.miscellaneous_fee || ''}</td><td class="border px-4 py-2">${f.other_charges || ''}</td><td class="border px-4 py-2">${f.total_assessment || ''}</td><td class="border px-4 py-2">${f.total_discount || ''}</td><td class="border px-4 py-2">${f.remarks || ''}</td></tr>`;
+                        feesTbody.innerHTML += `<tr class="text-center ${idx % 2 === 0 ? 'bg-gray-50' : 'bg-white'}"><td class="border px-4 py-2">${f.academic_year || ''}</td><td class="border px-4 py-2">${f.total_units || ''}</td><td class="border px-4 py-2">₱${f.tuition_fee || '0'}</td><td class="border px-4 py-2">₱${f.miscellaneous_fee || '0'}</td><td class="border px-4 py-2">₱${f.other_charges || '0'}</td><td class="border px-4 py-2 font-bold text-gray-900">₱${f.total_assessment || '0'}</td><td class="border px-4 py-2 font-bold text-green-700">₱${f.total_discount || '0'}</td><td class="border px-4 py-2">${f.remarks || ''}</td></tr>`;
                     });
                 }
 
@@ -1191,9 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error("Error loading athlete:", err));
     };
 
-    // -----------------------
-    // 6. LIVE SEARCH LOGIC
-    // -----------------------
+    // SEARCH LOGIC
     const searchInput = byId('search');
     const resultsBox = byId('searchResults');
     if (searchInput && resultsBox) {
@@ -1203,7 +988,13 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', (e) => {
             const v = e.target.value.trim();
             if (timer) clearTimeout(timer);
-            if (!v) { resultsBox.innerHTML = ''; resultsBox.classList.add('hidden'); byId('cancelBtn')?.click(); return; }
+            
+            if (!v) { 
+                resultsBox.innerHTML = ''; 
+                resultsBox.classList.add('hidden'); 
+                window.clearAthleteData(); 
+                return; 
+            }
 
             timer = setTimeout(() => {
                 fetch(searchUrl + '?q=' + encodeURIComponent(v), { headers: { 'Accept': 'application/json' } })
@@ -1230,21 +1021,72 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // -----------------------
-    // 7. URL ID CHECK
-    // -----------------------
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('id');
     if (editId) window.loadAthleteData(editId);
 
-    // -----------------------
-    // 8. MODALS & FORMS
-    // -----------------------
     window.toggleModal = (id, show) => { const m = byId(id); if(m) m.classList.toggle('hidden', !show); };
     window.toggleAchievementModal = (s) => toggleModal('AchievementModal', s);
     window.toggleAcademicModal = (s) => toggleModal('academicModal', s);
     window.toggleFeeModal = (s) => toggleModal('feeModal', s);
     window.toggleWorkModal = (s) => toggleModal('workModal', s);
+
+    // FEE MODAL & CALCULATOR LOGIC
+    const feeForm = document.getElementById('feeForm');
+    if (feeForm) {
+        feeForm.addEventListener('input', (e) => {
+            if (['tuition_fee', 'miscellaneous_fee', 'other_charges', 'classification'].includes(e.target.name)) {
+                const tuition = parseFloat(feeForm.querySelector('[name="tuition_fee"]').value) || 0;
+                const misc = parseFloat(feeForm.querySelector('[name="miscellaneous_fee"]').value) || 0;
+                const other = parseFloat(feeForm.querySelector('[name="other_charges"]').value) || 0;
+                
+                const assessment = tuition + misc + other;
+                feeForm.querySelector('[name="total_assessment"]').value = assessment.toFixed(2);
+                
+                const classification = feeForm.querySelector('[name="classification"]').value;
+                let rate = 0;
+                if (classification === 'Class_A') rate = 1.00;
+                if (classification === 'Class_B') rate = 0.75;
+                if (classification === 'Class_C') rate = 0.50;
+                
+                feeForm.querySelector('[name="total_discount"]').value = (tuition * rate).toFixed(2);
+            }
+        });
+
+        feeForm.onsubmit = async (e) => { 
+            e.preventDefault(); 
+            const d = Object.fromEntries(new FormData(feeForm).entries()); 
+            const selectedId = document.getElementById('selected_athlete_id').value;
+
+            if (selectedId) {
+                d.athlete_id = selectedId;
+                try {
+                    const res = await fetch('<?php echo e(url("/fees-discounts")); ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' },
+                        body: JSON.stringify(d)
+                    });
+                    
+                    const result = await res.json();
+                    if (result.success) {
+                        feeForm.reset(); 
+                        window.toggleFeeModal(false);
+                        
+                        if (typeof window.loadAthleteData === 'function') window.loadAthleteData(selectedId);
+                        
+                        const generalTab = document.querySelector('.tab-link[href="#general-info"]');
+                        if(generalTab) generalTab.click();
+                    } else {
+                        alert('Validation failed. Please ensure inputs are correct.');
+                    }
+                } catch (err) {
+                    alert('Error securely saving fee to the database.');
+                }
+            } else {
+                alert('Please search for and select an athlete first before adding a fee!');
+            }
+        };
+    }
 
     const achForm = byId('achievementForm');
     if(achForm) achForm.addEventListener('submit', e => { e.preventDefault(); const d = {year: byId('year').value, monthDay: byId('month_day').value, event: byId('event').value, venue: byId('venue').value, award: byId('award').value, category: byId('category').value, remarks: byId('remarks').value}; newAthleteData.achievements.push(d); getAchievementsTbody().innerHTML += `<tr><td class="px-6 py-3">${d.year}</td><td class="px-6 py-3">${d.monthDay}</td><td class="px-6 py-3">${d.event}</td><td class="px-6 py-3">${d.venue}</td><td class="px-6 py-3 text-green-700">${d.award}</td><td class="px-6 py-3">${d.category}</td><td class="px-6 py-3">${d.remarks}</td></tr>`; achForm.reset(); toggleAchievementModal(false); });
@@ -1252,18 +1094,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const acForm = byId('academicForm');
     if(acForm) acForm.addEventListener('submit', e => { e.preventDefault(); const d = {passed: acForm.querySelector('[name="Passed"]').value, enrolled: acForm.querySelector('[name="enrolled"]').value, percentage: acForm.querySelector('[name="percentage"]').value, remark: acForm.querySelector('[name="remark"]').value}; newAthleteData.academicRecords.push(d); getGradesTbody().innerHTML += `<tr><td class="px-6 py-3 text-center">${d.passed}</td><td class="px-6 py-3 text-center">${d.enrolled}</td><td class="px-6 py-3 text-center">${d.percentage}</td><td class="px-6 py-3 text-center">${d.remark}</td></tr>`; acForm.reset(); toggleAcademicModal(false); });
 
-    const feeForm = byId('feeForm');
-    if(feeForm) feeForm.addEventListener('submit', e => { e.preventDefault(); const d = Object.fromEntries(new FormData(feeForm).entries()); newAthleteData.fees.push(d); getFeesTbody().innerHTML += `<tr class="text-center"><td class="border px-4 py-2">${d.academic_year}</td><td class="border px-4 py-2">${d.total_units}</td><td class="border px-4 py-2">${d.tuition_fee}</td><td class="border px-4 py-2">${d.miscellaneous_fee}</td><td class="border px-4 py-2">${d.other_charges}</td><td class="border px-4 py-2">${d.total_assessment}</td><td class="border px-4 py-2">${d.total_discount}</td><td class="border px-4 py-2">${d.remarks}</td></tr>`; feeForm.reset(); toggleFeeModal(false); });
-
     const workForm = byId('workForm');
     if(workForm) workForm.addEventListener('submit', e => { e.preventDefault(); const d = Object.fromEntries(new FormData(workForm).entries()); newAthleteData.workHistory.push(d); getWorkTbody().innerHTML += `<tr class="bg-white"><td class="border px-4 py-2">${d.year}</td><td class="border px-4 py-2">${d.date}</td><td class="border px-4 py-2">${d.position}</td><td class="border px-4 py-2">${d.company}</td><td class="border px-4 py-2">${d.remarks}</td></tr>`; workForm.reset(); toggleWorkModal(false); });
 
-    // -----------------------
-    // 9. FINAL SAVE
-    // -----------------------
     function performFinalSave(e) {
         e.preventDefault();
-        collectGeneralInfo();
+        if (generalForm) {
+            generalForm.querySelectorAll('input[name], select[name], textarea[name]').forEach(input => {
+                newAthleteData.generalInfo[input.name] = input.value;
+            });
+        }
+        
         const selectedId = byId('selected_athlete_id') ? byId('selected_athlete_id').value : null;
         const endpoint = selectedId ? (updateBase + '/' + selectedId) : updateBase;
         const method = selectedId ? 'PUT' : 'POST';
@@ -1287,14 +1128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('saveBtn')?.addEventListener('click', performFinalSave);
     byId('updateBtn')?.addEventListener('click', performFinalSave);
 
-    // TELEPORT PRINT MODAL TO BODY
     const printModalEl = document.getElementById('printModal');
     if (printModalEl) document.body.appendChild(printModalEl);
 });
 
-// -----------------------
-// 10. PRINT LOGIC
-// -----------------------
 window.printAthlete = function() {
     const athleteId = document.getElementById('selected_athlete_id').value;
     if (athleteId) { document.getElementById('printIframe').src = '/athlete/' + athleteId + '/print'; togglePrintModal(true); } 

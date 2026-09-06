@@ -145,14 +145,15 @@
 
                     <!-- Date Picker -->
                     <div class="mb-3">
-                        <label class="form-label font-bold">Date (Today Only)</label>
-                        <input type="date" name="attendance_date" class="form-control" value="{{ isset($today) ? $today : now()->toDateString() }}" readonly>
-                        <small class="text-muted">Attendance can only be recorded for today.</small>
+                        <label class="form-label font-bold">Attendance Date</label>
+                        <!-- Removed 'readonly' and added 'max' to allow past backlogging safely -->
+                        <input type="date" name="attendance_date" class="form-control" value="{{ isset($today) ? $today : now()->toDateString() }}" max="{{ now()->toDateString() }}">
+                        <small class="text-muted">Select today or a past date to back-log historical attendance.</small>
                     </div>
 
                     <!-- Info Alert -->
                     <div class="alert alert-info mb-3 text-sm" role="alert">
-                        <strong>📋 How it works:</strong> Mark attendance today using the status buttons below. Tomorrow, new attendance records for that date will automatically become available. Past records remain in the <strong>Attendance History</strong>.
+                        <strong>📋 How it works:</strong> Select the date you want to record, then click the buttons to cycle through the status. Once saved, past records will seamlessly appear in the <strong>Attendance History</strong> matrix.
                     </div>
 
                     <!-- Athlete Attendance Table -->

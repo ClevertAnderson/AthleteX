@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sport extends Model
 {
-    //
+    use HasFactory;
+
+    // 🚀 Add this line right here:
+    protected $fillable = ['name'];
 }

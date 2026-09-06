@@ -8,20 +8,48 @@ use App\Services\BlockchainService;
 
 class BlockchainController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Run the math engine to check if the chain is broken
+        // 1. Run the cryptographic math engine to check if the chain is broken
         $verification = BlockchainService::verifyChain();
         
-        // 2. Grab all the blocks to display in the table (newest at the top)
-        $logs = BlockchainLog::with('user')->orderBy('id', 'desc')->get();
+        // 2. Always get the TOTAL absolute blocks for the scoreboard (unfiltered)
+        $totalBlocks = BlockchainLog::count();
+
+        // 3. Build the query engine (🚀 STRICTLY LATEST TO OLDEST BY TIMESTAMP)
+        $query = BlockchainLog::with('user')
+            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc');
+
+        // Apply Date Filters
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Apply Keyword Search (Strictly searches 'name' to prevent SQL errors)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('action', 'LIKE', "%{$search}%")
+                  ->orWhereHas('user', function($userQ) use ($search) {
+                      $userQ->where('name', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
         
-        // 3. Send the data to the dashboard view
+        // 4. Fetch the final filtered logs
+        $logs = $query->get();
+        
+        // 5. Send data to the dashboard
         return view('features.blockchain_dashboard', [
             'isSecure' => $verification['is_secure'],
             'tamperedBlocks' => $verification['tampered_blocks'],
             'logs' => $logs,
-            'totalBlocks' => $logs->count()
+            'totalBlocks' => $totalBlocks,
+            'filteredCount' => $logs->count()
         ]);
     }
 }

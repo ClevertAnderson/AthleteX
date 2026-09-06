@@ -14,31 +14,31 @@
             <!-- KPI Cards Grid (Balanced 4-column layout for rows 1 and 2) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
 
-                <!-- 1. Total Active Athletes -->
-                <div class="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
-                    <p class="text-gray-500">Total Active Athletes</p>
+                <!-- 1. CLICKABLE: Total Active Athletes -->
+                <a href="{{ route('athletes.index', ['status' => 'Active']) }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg hover:scale-105 border border-transparent hover:border-green-600 transition-all duration-200 cursor-pointer no-underline group">
+                    <p class="text-gray-500 group-hover:text-green-600 transition-colors">Total Active Athletes</p>
                     <h2 class="text-3xl font-bold text-green-600">
                         {{ $activeAthletesCount ?? 0 }}
                     </h2>
-                </div>
+                </a>
 
-                <!-- 2. Total Alumni -->
-                <div class="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
-                    <p class="text-gray-500">Total Alumni</p>
+                <!-- 2. CLICKABLE: Total Alumni -->
+                <a href="{{ route('athletes.index', ['status' => 'Alumni']) }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg hover:scale-105 border border-transparent hover:border-blue-600 transition-all duration-200 cursor-pointer no-underline group">
+                    <p class="text-gray-500 group-hover:text-blue-600 transition-colors">Total Alumni</p>
                     <h2 class="text-3xl font-bold text-blue-600">
                         {{ $alumniCount ?? 0 }}
                     </h2>
-                </div>
+                </a>
 
                 {{-- ROLE-BASED UI: Only Admins can see the Coaches card! --}}
                 @if(auth()->user()->role === 'admin')
-                <!-- 3. Total Coaches -->
-                <div class="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
-                    <p class="text-gray-500">Total Coaches</p>
+                <!-- 3. CLICKABLE: Total Coaches -->
+                <a href="{{ route('coaches.index', ['status' => 'Active']) }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg hover:scale-105 border border-transparent hover:border-blue-500 transition-all duration-200 cursor-pointer no-underline group">
+                    <p class="text-gray-500 group-hover:text-blue-500 transition-colors">Total Coaches</p>
                     <h2 class="text-3xl font-bold text-blue-600">
                         {{ $coachesCount ?? 0 }}
                     </h2>
-                </div>
+                </a>
                 @endif
 
                 <!-- 4. Total Achievements (Clickable) -->
@@ -49,17 +49,17 @@
                     </h2>
                 </a>
 
-                <!-- ================= ROW 2 (Filled Out to Cure the Lonely Card!) ================= -->
+                <!-- ================= ROW 2 ================= -->
 
-                <!-- 5. Total Inactive -->
-                <div class="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
-                    <p class="text-gray-500">Total of Inactive Athletes</p>
+                <!-- 5. CLICKABLE: Total Inactive -->
+                <a href="{{ route('athletes.index', ['status' => 'Inactive']) }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg hover:scale-105 border border-transparent hover:border-orange-600 transition-all duration-200 cursor-pointer no-underline group">
+                    <p class="text-gray-500 group-hover:text-orange-600 transition-colors">Total of Inactive Athletes</p>
                     <h2 class="text-3xl font-bold text-orange-600">
                         {{ $inactive ?? 0 }}
                     </h2>
-                </div>
+                </a>
 
-                <!-- 6. CLICKABLE Pending Approvals Card (Links directly to approvals) -->
+                <!-- 6. CLICKABLE Pending Approvals Card -->
                 <a href="{{ route('admin.approvals') }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg transition cursor-pointer no-underline group">
                     <p class="text-gray-500 group-hover:text-red-600 transition">Pending Approvals</p>
                     <h2 class="text-3xl font-bold text-red-600">
@@ -68,19 +68,19 @@
                 </a>
 
                 <!-- 8. Active Sports Programs -->
-                <div class="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
-                    <p class="text-gray-500">Active Sports</p>
+                <a href="{{ route('sports') }}" class="block bg-white p-5 rounded-xl shadow hover:shadow-lg hover:scale-105 border border-transparent hover:border-indigo-600 transition-all duration-200 cursor-pointer no-underline group">
+                    <p class="text-gray-500 group-hover:text-indigo-600 transition-colors">Active Sports</p>
                     <h2 class="text-3xl font-bold text-indigo-600">
-                        {{ $activeSports ?? 12 }}
+                        {{ $activeSports ?? 0 }}
                     </h2>
-                </div>
+                </a>
 
             </div>
 
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
-                <!-- Monthly Achievements Chart (Restored your exact Chart.js setup) -->
+                <!-- Monthly Achievements Chart -->
                 <div class="bg-white p-6 rounded-xl shadow h-96">
                     <h3 class="font-semibold text-lg mb-4 text-gray-700">Achievements Per Month</h3>
                     <div class="h-[85%] cursor-pointer" title="Click a bar to view achievements">

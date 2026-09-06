@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Athlete Registration - SDO</title>
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css']); ?>
+    <!-- 🚀 NEW: SweetAlert2 Library -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-gradient-to-br from-green-900 to-green-800 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Modal-style Card -->
-    <div class="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+    <!-- Main Card -->
+    <div class="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden relative z-10">
 
         <!-- Header -->
         <div class="bg-green-800 text-white p-6 text-center">
@@ -22,13 +24,7 @@
         <!-- Form Content -->
         <div class="p-6 space-y-6">
 
-            <!-- Alerts -->
-            <?php if(session('success')): ?>
-                <div class="bg-green-100 text-green-900 p-3 rounded-md text-sm border border-green-300">
-                    <?php echo e(session('success')); ?>
-
-                </div>
-            <?php endif; ?>
+            <!-- Alerts (For general errors) -->
             <?php if(session('error')): ?>
                 <div class="bg-red-100 text-red-900 p-3 rounded-md text-sm border border-red-300">
                     <?php echo e(session('error')); ?>
@@ -42,12 +38,6 @@
                             <li><?php echo e($error); ?></li>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </ul>
-                </div>
-            <?php endif; ?>
-            <?php if(session('tryout_success')): ?>
-                <div class="bg-green-50 border-l-4 border-green-600 p-3 rounded-md text-green-800 text-sm">
-                    <strong>🎫 Registration Confirmed!</strong>
-                    <p class="mt-1"><?php echo session('tryout_success'); ?></p>
                 </div>
             <?php endif; ?>
 
@@ -83,7 +73,7 @@ $message = $__bag->first($__errorArgs[0]); ?> border-red-500 ring-red-500 <?php 
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?> bg-gray-50 focus:ring-2 focus:ring-green-600 focus:border-green-600" required oninput="validateEmail(this)">
-                            <span id="emailError" class="text-red-500 text-xs hidden font-bold mt-1">Enter a valid email (e.g., user@gmail.com)</span>
+                            <span id="emailError" class="text-red-500 text-xs hidden font-bold mt-1">Enter a valid email</span>
                             <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
@@ -179,6 +169,34 @@ unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 
+<!-- 🚀 NEW: SWEETALERT TRIGGER FOR SUCCESS -->
+<?php if(session('success') || session('tryout_success')): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: 'Registration Confirmed!',
+            html: `
+                <div class="text-left bg-green-50 p-4 rounded-md border border-green-200 mb-3 font-medium text-gray-800">
+                    <?php echo session('tryout_success') ?? session('success'); ?>
+
+                </div>
+                <p class="text-sm text-gray-500">Your application has been successfully submitted to the Sports Development Office. Please take note of your schedule.</p>
+            `,
+            icon: 'success',
+            confirmButtonColor: '#15803d', // Tailwind green-700
+            confirmButtonText: 'I Understand, Close',
+            allowOutsideClick: false, // Forces them to click the button
+            allowEscapeKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Refresh the page to clear the form fields safely
+                window.location.href = window.location.pathname; 
+            }
+        });
+    });
+</script>
+<?php endif; ?>
+
 <script>
     let isStudentIdValid = false;
     let isEmailValid = false;
@@ -242,7 +260,6 @@ unset($__errorArgs, $__bag); ?>
         input.value = val;
 
         const err = document.getElementById('contactError');
-        // Must be exactly 11 digits and start with '09'
         if (val.length === 11 && val.startsWith('09')) {
             err.classList.add('hidden');
             input.classList.remove('border-red-500', 'ring-red-500');

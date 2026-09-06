@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Validator;
 
 class CoachController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // If user is a coach, show only their own profile
         if (auth()->check() && auth()->user()->role === 'coach') {
@@ -27,8 +27,16 @@ class CoachController extends Controller
             return view('features.coach', compact('coach'));
         }
         
-        // Admins see all coaches
-        $coaches = Coach::all();
+        // Admins see all coaches (🚀 CATCH DASHBOARD FILTER CLICKS HERE)
+        $query = Coach::query();
+
+        if ($request->filled('status')) {
+            // Your database column is called 'coach_status'
+            $query->where('coach_status', $request->status);
+        }
+
+        $coaches = $query->get();
+        
         return view('c_lists.coach_lists', compact('coaches'));
     }
 
@@ -217,6 +225,7 @@ class CoachController extends Controller
 
             // Handle picture upload if present
             if ($request->hasFile('coach_picture')) {
+                $path = $request->file('coach_picture')->store('coaches', 'public');
                 $coachData->update(['coach_picture' => $path]);
             }
 
@@ -239,33 +248,6 @@ class CoachController extends Controller
             return back()->with('error', 'Failed to create coach');
         }
     }
-
-    // public function show(Request $request, Coach $coach)
-    // {
-    //     $coach->load(['achievements', 'workHistories', 'memberships', 'schedule', 'expenses', 'seminars']);
-
-    //     $coach->picture_url = $coach->coach_picture ? asset('storage/' . $coach->coach_picture) : null;
-
-    //     return response()->json([
-    //         'id' => $coach->id,
-    //         'coach_first_name' => $coach->coach_first_name,
-    //         'coach_last_name' => $coach->coach_last_name,
-    //         'coach_middle_initial' => $coach->coach_middle_initial,
-    //         'coach_gender' => $coach->coach_gender,
-    //         'coach_birthdate' => $coach->coach_birthdate,
-    //         'coach_email' => $coach->coach_email,
-    //         'coach_contact_number' => $coach->coach_contact_number,
-    //         'coach_sport_event' => $coach->coach_sport_event,
-    //         'coach_picture' => $coach->coach_picture,
-    //         'achievements' => $coach->achievements->toArray(),
-    //         'workHistories' => $coach->workHistories->toArray(),
-    //         'memberships' => $coach->memberships->toArray(),
-    //         'schedule' => $coach->schedule->toArray(),
-    //         'expenses' => $coach->expenses->toArray(),
-    //         'seminars' => $coach->seminars->toArray(),
-    //     ]);
-    // }
-
 
     public function update(Request $request, Coach $coach)
     {
@@ -445,65 +427,73 @@ class CoachController extends Controller
      * Search coaches (AJAX endpoint).
      */
     public function search(Request $request)
-{
-    $query = $request->input('q', '');
+    {
+        $query = $request->input('q', '');
 
-    if (strlen($query) < 2) {
-        return response()->json([]);
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        return Coach::where('coach_first_name', 'like', "%{$query}%")
+            ->orWhere('coach_last_name', 'like', "%{$query}%")
+            ->orWhereRaw("CONCAT(coach_first_name, ' ', coach_last_name) LIKE ?", ["%{$query}%"])
+            ->limit(10)
+            ->get(['id', 'coach_first_name', 'coach_last_name', 'coach_sport_event']);
     }
 
-    return Coach::where('coach_first_name', 'like', "%{$query}%")
-        ->orWhere('coach_last_name', 'like', "%{$query}%")
-        ->orWhereRaw("CONCAT(coach_first_name, ' ', coach_last_name) LIKE ?", ["%{$query}%"])
-        ->limit(10)
-        ->get(['id', 'coach_first_name', 'coach_last_name', 'coach_sport_event']);
-}
+    public function show(Request $request, Coach $coach)
+    {
+        // Load relationships - use exact method names from Coach model
+        $coach->load([
+            'achievements', 
+            'schedule',       // This will be 'schedule' in JSON
+            'expenses', 
+            'memberships', 
+            'seminars', 
+            'workHistories'   // This will be 'workHistories' in JSON (plural)
+        ]);
 
-public function show(Request $request, Coach $coach)
-{
-    // Load relationships - use exact method names from Coach model
-    $coach->load([
-        'achievements', 
-        'schedule',       // This will be 'schedule' in JSON
-        'expenses', 
-        'memberships', 
-        'seminars', 
-        'workHistories'   // This will be 'workHistories' in JSON (plural)
-    ]);
+        $coach->picture_url = $coach->coach_picture ? asset('storage/' . $coach->coach_picture) : null;
 
-    $coach->picture_url = $coach->coach_picture ? asset('storage/' . $coach->coach_picture) : null;
+        // Return the model - Laravel auto-includes all loaded relationships
+        return response()->json($coach);
+    }
 
-    // Return the model - Laravel auto-includes all loaded relationships
-    return response()->json($coach);
-}
+    // Get available sports (exclude already assigned sports)
+    public function getAvailableSports()
+    {
+        // All available sports
+        $allSports = [
+            'Basketball',
+            'Volleyball',
+            'Athletics',
+            'Swimming',
+            'Taekwondo',
+            'Chess',
+            'Football',
+            'Boxing',
+        ];
 
-// Get available sports (exclude already assigned sports)
-public function getAvailableSports()
-{
-    // All available sports
-    $allSports = [
-        'Basketball',
-        'Volleyball',
-        'Athletics',
-        'Swimming',
-        'Taekwondo',
-        'Chess',
-        'Football',
-        'Boxing',
-    ];
+        // Get sports already assigned to coaches
+        $assignedSports = Coach::whereNotNull('coach_sport_event')
+            ->pluck('coach_sport_event')
+            ->unique()
+            ->toArray();
 
-    // Get sports already assigned to coaches
-    $assignedSports = Coach::whereNotNull('coach_sport_event')
-        ->pluck('coach_sport_event')
-        ->unique()
-        ->toArray();
+        // Filter out assigned sports
+        $availableSports = array_diff($allSports, $assignedSports);
 
-    // Filter out assigned sports
-    $availableSports = array_diff($allSports, $assignedSports);
+        return response()->json([
+            'available' => array_values($availableSports),
+            'assigned' => $assignedSports,
+        ]);
+    }
 
-    return response()->json([
-        'available' => array_values($availableSports),
-        'assigned' => $assignedSports,
-    ]);
-}
+    // --- 🖨️ ADDED PRINT PROFILE METHOD FOR COACHES ---
+    public function printProfile($id)
+    {
+        $coach = \App\Models\Coach::findOrFail($id);
+        // Uses the exact same view as the athletes!
+        return view('features.print_profile', compact('coach'));
+    }
 }

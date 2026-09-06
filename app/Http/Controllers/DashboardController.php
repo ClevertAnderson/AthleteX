@@ -48,7 +48,7 @@ class DashboardController extends Controller
         // 🚀 METRICS FOR THE BALANCED DASHBOARD GRID (Counts ALL pending items: Tryouts + Student Requests)
         $pendingApprovals = Athlete::where('approval_status', 'pending')->count();
         
-        $activeSports = Sport::count(); 
+        $activeSports = \App\Models\Sport::count();
 
         $achievementsMonthly = Achievement::select(
                 DB::raw('MONTH(created_at) as month'),
@@ -57,15 +57,6 @@ class DashboardController extends Controller
             ->groupBy('month')
             ->pluck('count', 'month');
 
-        return view('features.dashboard', compact(
-            'activeAthletesCount', 
-            'alumniCount', 
-            'coachesCount', 
-            'inactive', 
-            'totalAchievements', 
-            'achievementsMonthly',
-            'pendingApprovals',
-            'activeSports'
-        ));
+        return view('features.dashboard', compact('activeAthletesCount', 'alumniCount', 'coachesCount', 'inactive', 'pendingApprovals', 'activeSports', 'totalAchievements', 'achievementsMonthly'));
     }
 }

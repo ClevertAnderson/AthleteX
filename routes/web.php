@@ -59,10 +59,19 @@ Route::post('/login', function (Request $request) {
 })->name('login');
 
 // ==============================================================
-// PUBLIC TRYOUT REGISTRATION (The "Public Form")
+// PUBLIC TRYOUT & ALUMNI REGISTRATION
 // ==============================================================
 Route::get('/tryout-registration', [AthleteController::class, 'showPublicRegistrationForm'])->name('tryout.register.show');
 Route::post('/tryout-registration', [AthleteController::class, 'storePublicRegistration'])->name('tryout.register.submit');
+
+// Public Alumni Form Link
+Route::get('/alumni/form', function () {
+    return view('alumni.form'); 
+})->name('alumni.form.show');
+
+// Public Alumni Form Submission (Correctly points to AthleteController)
+Route::post('/alumni/form', [AthleteController::class, 'storePublicRegistration'])
+    ->name('alumni.form.store');
 
 // ==============================================================
 // AUTHENTICATED ROUTES (Login Required)
@@ -85,7 +94,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/coach', function () { return view('features.coach'); })->name('coach');
     Route::get('/schedule', function () { return view('features.schedule'); })->name('schedule');
-    Route::get('/sports', function () { return view('features.sports'); })->name('sports');
+    Route::get('/sports', [SportsController::class, 'index'])->name('sports');
     Route::get('/student-athlete', [AthleteController::class, 'create'])->name('student.athlete');
 
     Route::get('/admin/security-ledger', [BlockchainController::class, 'index'])->name('admin.blockchain');
@@ -100,7 +109,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/athletes/search', [AthleteController::class, 'search'])->name('athletes.search');
     Route::get('/athletes/{athlete}', [AthleteController::class, 'show'])->name('athletes.show');
     Route::put('/athletes/{athlete}', [AthleteController::class, 'update'])->name('athletes.update');
+    
+    // PRINT ROUTES FOR ATHLETES AND COACHES
     Route::get('/athlete/{id}/print', [App\Http\Controllers\AthleteController::class, 'printProfile'])->name('athlete.print');
+    Route::get('/coach/{id}/print', [App\Http\Controllers\CoachController::class, 'printProfile'])->name('coach.print');
 
     // Related Athlete Tables (Achievements, Grades, Fees, Work)
     Route::post('/academic-evaluation', [AcademicEvaluationController::class, 'store']);
@@ -198,14 +210,18 @@ Route::prefix('admin')
     Route::get('/grades', [AdminController::class, 'grades'])->name('grades');
     Route::get('/transactions', [AdminController::class, 'transactions'])->name('transactions');
 
-    // 2. APPROVALS (UPDATED: Using AthleteController to handle approvals)
+    // 2. APPROVALS (Using AthleteController to handle approvals)
     Route::get('/approvals', [AthleteController::class, 'showApprovals'])->name('approvals');
     Route::get('/approvals/{id}/view', [AthleteController::class, 'show'])->name('approvals.show');
     Route::get('/athletes/print/{id}', [App\Http\Controllers\AthleteController::class, 'printProfile'])->name('athletes.print');
 
-    // These are the Actions (Approve/Reject)
+    // These are the Actions for Athletes (Approve/Reject)
     Route::post('/approvals/{id}/approve', [AthleteController::class, 'approve'])->name('approve.athlete');
     Route::post('/approvals/{id}/decline', [AthleteController::class, 'decline'])->name('reject.athlete');
+
+    // These are the Actions for Alumni (Approve/Reject)
+    Route::post('/alumni/{id}/approve', [AthleteController::class, 'approveAlumni'])->name('approve.alumni');
+    Route::post('/alumni/{id}/reject', [AthleteController::class, 'rejectAlumni'])->name('reject.alumni');
 
     // 3. Other Admin Actions
     Route::post('/save-settings', [AdminController::class, 'saveSettings'])->name('saveSettings');
@@ -220,7 +236,7 @@ Route::prefix('admin')
 
     Route::get('/sports-management', [SportsController::class, 'manageIndex'])->name('sports.manage');
     Route::post('/sports-management/store', [SportsController::class, 'manageStore'])->name('sports.manage.store');
-    Route::post('/sports-management/{id}/delete', [SportsController::class, 'manageDestroy'])->name('sports.manage.destroy');
+    Route::delete('/sports-management/{id}/delete', [SportsController::class, 'manageDestroy'])->name('sports.manage.destroy');
 
     // attendance route
     Route::get('/attendance', [AttendanceController::class, 'adminIndex'])

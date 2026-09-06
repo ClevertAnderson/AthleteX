@@ -53,7 +53,6 @@
                                     <label class="form-label fw-bold text-secondary">Sport Event <span class="text-danger">*</span></label>
                                     <select name="sport_event" class="form-select" required>
                                         <option value="">Select Sport...</option>
-                                        <!-- DYNAMICALLY LOADED FROM YOUR 'sports' DATABASE TABLE -->
                                         @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
                                             <option value="{{ str_replace(' ', '_', $sport->name) }}">
                                                 {{ $sport->name }}
@@ -75,9 +74,10 @@
                                     <select name="venue" class="form-select" required>
                                         <option value="">Select Venue...</option>
                                         <option value="UC Main Gym">UC Main Gym</option>
-                                        <option value="UC Court B">UC Court B</option>
+                                        <option value="UC Campo Libertad">UC Campo Libertad</option>
                                         <option value="Athletic Bowl">Athletic Bowl</option>
-                                        <option value="Baguio City National High School">Baguio City National High School</option>
+                                        <option value="Athletic Bowl Swimming Pool">Athletic Bowl Swimming Pool</option>
+                                        <option value="Melvin Jones">Melvin Jones</option>
                                         <option value="Other">Other (Specify in Notes)</option>
                                     </select>
                                 </div>
@@ -149,10 +149,12 @@
                                                             View
                                                         </button>
 
+                                                        @if(!$isExpired)
                                                         <!-- EDIT BUTTON -->
                                                         <button type="button" class="btn btn-sm btn-warning fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#editScheduleModal{{ $schedule->id }}">
                                                             Edit
                                                         </button>
+                                                        @endif
 
                                                         <!-- DELETE BUTTON -->
                                                         <form action="{{ route('admin.tryouts.destroy', $schedule->id) }}" method="POST" class="m-0 p-0">
@@ -232,7 +234,7 @@
 </div> 
 
 <!-- ========================================== -->
-<!-- MODALS (100% CLICKABLE FIX) -->
+<!-- MODALS -->
 <!-- ========================================== -->
 @foreach($schedules as $schedule)
     <!-- VIEW MODAL -->
@@ -274,6 +276,12 @@
     </div>
 
     <!-- EDIT MODAL -->
+    @php
+        $tryoutDateTime = \Carbon\Carbon::parse($schedule->tryout_date . ' ' . $schedule->tryout_time);
+        $isExpired = $tryoutDateTime->isPast();
+    @endphp
+
+    @if(!$isExpired)
     <div class="modal fade" id="editScheduleModal{{ $schedule->id }}" tabindex="-1" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.6);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -288,10 +296,8 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold text-secondary">Sport Event <span class="text-danger">*</span></label>
                             <select name="sport_event" class="form-select" required>
-                                <!-- DYNAMICALLY LOADED FROM YOUR 'sports' DATABASE TABLE -->
                                 @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
                                     @php
-                                        // Format the database name to match how it's stored in the tryouts table
                                         $formattedSport = str_replace(' ', '_', $sport->name);
                                     @endphp
                                     <option value="{{ $formattedSport }}" {{ $schedule->sport_event == $formattedSport ? 'selected' : '' }}>
@@ -315,9 +321,10 @@
                             <label class="form-label fw-bold text-secondary">Venue <span class="text-danger">*</span></label>
                             <select name="venue" class="form-select" required>
                                 <option value="UC Main Gym" {{ $schedule->venue == 'UC Main Gym' ? 'selected' : '' }}>UC Main Gym</option>
-                                <option value="UC Court B" {{ $schedule->venue == 'UC Court B' ? 'selected' : '' }}>UC Court B</option>
+                                <option value="UC Campo Libertad" {{ $schedule->venue == 'UC Campo Libertad' ? 'selected' : '' }}>UC Campo Libertad</option>
                                 <option value="Athletic Bowl" {{ $schedule->venue == 'Athletic Bowl' ? 'selected' : '' }}>Athletic Bowl</option>
-                                <option value="Baguio City National High School" {{ $schedule->venue == 'Baguio City National High School' ? 'selected' : '' }}>Baguio City National High School</option>
+                                <option value="Athletic Bowl Swimming Pool" {{ $schedule->venue == 'Athletic Bowl Swimming Pool' ? 'selected' : '' }}>Athletic Bowl Swimming Pool</option>
+                                <option value="Melvin Jones" {{ $schedule->venue == 'Melvin Jones' ? 'selected' : '' }}>Melvin Jones</option>
                                 <option value="Other" {{ $schedule->venue == 'Other' ? 'selected' : '' }}>Other</option>
                             </select>
                         </div>
@@ -336,6 +343,7 @@
             </div>
         </div>
     </div>
+    @endif
 @endforeach
 
 <script>

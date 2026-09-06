@@ -19,23 +19,34 @@ use Illuminate\Support\Facades\Mail;
 
 class AthleteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // 🚀 Fetch ALL sports from the DB for the dropdown filter
+        $sports = \App\Models\Sport::all();
+
         if (auth()->user()->role === 'admin') {
             
-            // 1. Regular Athletes + Alumni
-            $athletes = Athlete::where('approval_status', 'approved')
-                               ->where('classification', '!=', 'Tryout') 
-                               ->get();
+            $athleteQuery = Athlete::where('approval_status', 'approved')
+                                   ->where('classification', '!=', 'Tryout');
 
-            // 2. Passed Tryouts
+            // CATCH DASHBOARD FILTER CLICKS
+            if ($request->filled('status')) {
+                if ($request->status === 'Alumni') {
+                    $athleteQuery->where('classification', 'Alumni');
+                } else {
+                    $athleteQuery->where('status', $request->status)
+                                 ->where('classification', '!=', 'Alumni');
+                }
+            }
+
+            $athletes = $athleteQuery->get();
+
             $recruits = Athlete::where('status', 'Active')
                                ->where('classification', 'Tryout') 
                                ->get();
 
         } elseif (auth()->user()->role === 'coach') {
             
-            // 🔒 STRICT RBAC CHECK: Filter by the coach's specific sport
             $coachSport = auth()->user()->coach->coach_sport_event ?? null;
 
             if ($coachSport) {
@@ -58,9 +69,10 @@ class AthleteController extends Controller
             $recruits = collect(); 
         }
         
-        // Pass BOTH lists to the view
-        return view('features.athlete_lists', compact('athletes', 'recruits'));
+        // Pass $sports to the view!
+        return view('features.athlete_lists', compact('athletes', 'recruits', 'sports'));
     }
+
     // ==========================================
     // APPROVALS PAGE LOGIC
     // ==========================================
@@ -72,12 +84,17 @@ class AthleteController extends Controller
                             ->where('classification', 'Tryout')
                             ->latest()->get();
 
-        // 2. Coach-Submitted Athletes (Catches non-tryouts AND null/empty classifications)
+        // 2. Coach-Submitted Athletes (Catches non-tryouts AND non-alumni)
         $studentRequests = Athlete::where('approval_status', 'pending')
                             ->where(function($q) {
-                                $q->where('classification', '!=', 'Tryout')
+                                $q->whereNotIn('classification', ['Tryout', 'Alumni'])
                                   ->orWhereNull('classification');
                             })
+                            ->latest()->get();
+
+        // 3. Alumni Submissions
+        $alumniPendings = Athlete::where('approval_status', 'pending')
+                            ->where('classification', 'Alumni')
                             ->latest()->get();
 
         $approvedAthletes = Athlete::where('status', 'Active')
@@ -94,6 +111,7 @@ class AthleteController extends Controller
         return view('features.approvals', compact(
             'tryoutPendings', 
             'studentRequests',
+            'alumniPendings',
             'approvedAthletes', 
             'declinedAthletes'
         ));
@@ -134,6 +152,32 @@ class AthleteController extends Controller
         }
 
         return redirect()->back()->with('success', 'Athlete application has been rejected and deleted.');
+    }
+
+    // --- NEW ALUMNI APPROVAL LOGIC ---
+    public function approveAlumni(Request $request, $id)
+    {
+        $athlete = Athlete::findOrFail($id);
+        
+        $athlete->update([
+            'status' => 'Graduated', // Marking as an official Alumni
+            'approval_status' => 'approved',
+        ]);
+
+        BlockchainService::logAction('Verified Alumni Record: ' . $athlete->first_name . ' ' . $athlete->last_name, $athlete->toArray());
+
+        return redirect()->back()->with('success', 'Alumni record successfully verified and added to the master roster!');
+    }
+
+    public function rejectAlumni(Request $request, $id)
+    {
+        $athlete = Athlete::findOrFail($id);
+        $athleteData = $athlete->toArray(); 
+        $athlete->delete();
+
+        BlockchainService::logAction('Rejected Alumni Submission: ' . $athleteData['first_name'] . ' ' . $athleteData['last_name'], $athleteData);
+
+        return redirect()->back()->with('success', 'Alumni submission was rejected and deleted.');
     }
 
     public function showPending()
@@ -536,10 +580,15 @@ class AthleteController extends Controller
             ],
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
-            'email'          => ['required', 'string', 'email', 'max:255', 'regex:/^[\w\-\.]+@([\w\-]+\.)+[a-zA-Z]{2,7}$/'], // 👈 Strict email validation preventing 'a@g'
-            'contact_number' => ['required', 'regex:/^09[0-9]{9}$/'], // 👈 Strict 11-digit mobile validation starting with 09
+            'email'          => ['required', 'string', 'email', 'max:255', 'regex:/^[\w\-\.]+@([\w\-]+\.)+[a-zA-Z]{2,7}$/'], 
+            'contact_number' => ['required', 'regex:/^09[0-9]{9}$/'], 
             'sport_event'    => 'required|string',
-            'course'         => 'nullable|string|max:255', 
+            'course'         => 'nullable|string|max:255',
+            
+            // Allow new Alumni employment fields
+            'year_graduated'  => 'nullable|integer',
+            'current_work'    => 'nullable|string|max:255',
+            'current_company' => 'nullable|string|max:255',
         ];
 
         $messages = [
@@ -558,6 +607,7 @@ class AthleteController extends Controller
                 'email' => $validated['email'],
                 'sport_event' => $validated['sport_event'],
                 'status' => 'Pending', 
+                'approval_status' => 'pending', // VERY IMPORTANT: Required to show up in the approval queues!
                 'classification' => $validated['classification'],
                 'picture_path' => null, 
                 'course' => $request->input('course'),
@@ -565,6 +615,11 @@ class AthleteController extends Controller
                 'contact_number' => $request->input('contact_number'),
                 'address' => $request->input('address'),
                 'city_municipality' => $request->input('city_municipality'),
+                
+                // Add new Alumni data
+                'year_graduated' => $request->input('year_graduated'),
+                'current_work' => $request->input('current_work'),
+                'current_company' => $request->input('current_company'),
             ]);
 
             // 🚀 BLOCKCHAIN LOGGING: Track Public Registrations

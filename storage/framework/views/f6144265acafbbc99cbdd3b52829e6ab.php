@@ -30,31 +30,27 @@
             <input type="text" id="athleteSearchInput" placeholder="Search name, ID…" 
                 class="border border-gray-300 rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-green-500 outline-none">
 
+            <!-- 🚀 Dynamic Sports Dropdown -->
             <select id="athleteSportFilter" class="border border-gray-300 rounded px-3 py-2 text-sm w-full">
                 <option value="">All Sports</option>
-                <option value="Basketball">Basketball</option>
-                <option value="Volleyball">Volleyball</option>
-                <option value="Athletics">Athletics</option>
-                <option value="Swimming">Swimming</option>
-                <option value="Taekwondo">Taekwondo</option>
-                <option value="Chess">Chess</option>
-                <option value="Football">Football</option>
-                <option value="Boxing">Boxing</option>
+                <?php if(isset($sports)): ?>
+                    <?php $__currentLoopData = $sports; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sport): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e(strtolower($sport->name)); ?>"><?php echo e($sport->name); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endif; ?>
             </select>
 
+            <!-- 🚀 Smart Status Filter (Managed by JS) -->
             <select id="athleteStatusFilter" class="border border-gray-300 rounded px-3 py-2 text-sm w-full">
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Transfered">Transfered</option>
-                <option value="Graduated">Graduated</option>
+                <!-- Javascript will dynamically swap these options based on the active tab -->
             </select>
 
             <select id="athleteClassificationFilter" class="border border-gray-300 rounded px-3 py-2 text-sm w-full">
                 <option value="">All Classifications</option>
-                <option value="Class A">Class A</option>
-                <option value="Class B">Class B</option>
-                <option value="Class C">Class C</option>
+                <option value="class a">Class A</option>
+                <option value="class b">Class B</option>
+                <option value="class c">Class C</option>
+                <option value="alumni">Alumni</option> <!-- Added Alumni here -->
             </select>
         </div>
     </div>
@@ -79,15 +75,14 @@
                 <tbody class="divide-y divide-gray-200">
                     <?php $__currentLoopData = $athletes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $athlete): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="athlete-row hover:bg-gray-50 transition" 
-                            data-tab-status="<?php echo e($athlete->status === 'Active' ? 'Active' : 'Inactive'); ?>"
-                            data-status="<?php echo e($athlete->status); ?>"
-                            data-sport="<?php echo e(str_replace('_', ' ', $athlete->sport_event)); ?>"
-                            data-classification="<?php echo e(str_replace('_', ' ', $athlete->classification)); ?>">
+                            data-tab-status="<?php echo e(($athlete->status === 'Active' && $athlete->classification !== 'Alumni') ? 'Active' : 'Inactive'); ?>"
+                            data-status="<?php echo e(strtolower($athlete->status)); ?>"
+                            data-sport="<?php echo e(strtolower(str_replace('_', ' ', $athlete->sport_event))); ?>"
+                            data-classification="<?php echo e(strtolower(str_replace('_', ' ', $athlete->classification))); ?>">
                             
                             <td class="px-4 py-3 text-center text-gray-500 serial-number"></td>
                             <td class="px-4 py-3 text-gray-600 searchable-id font-medium"><?php echo e($athlete->student_id); ?></td>
                             
-                            <!-- Combined Name Column -->
                             <td class="px-4 py-3 font-semibold text-gray-900 searchable-name">
                                 <?php echo e($athlete->last_name); ?>, <?php echo e($athlete->first_name); ?> <?php echo e(substr($athlete->middle_name, 0, 1)); ?>.
                             </td>
@@ -126,17 +121,40 @@
 <script>
     let currentTab = 'Active';
 
-    function switchTab(tabName) {
+    // 🚀 SMART TAB SWITCHER
+    function switchTab(tabName, initStatus = null) {
         currentTab = tabName;
         const activeTabBtn = document.getElementById('tab-active');
         const inactiveTabBtn = document.getElementById('tab-inactive');
+        const statusFilter = document.getElementById('athleteStatusFilter');
 
         if (tabName === 'Active') {
             activeTabBtn.className = "px-6 py-3 font-semibold text-green-700 border-b-4 border-green-700 transition flex items-center gap-2";
             inactiveTabBtn.className = "px-6 py-3 font-semibold text-gray-500 border-b-4 border-transparent hover:text-green-700 transition flex items-center gap-2";
+            
+            // Lock Status Filter for Active Tab
+            statusFilter.innerHTML = '<option value="active">Active</option>';
+            statusFilter.disabled = true;
+            statusFilter.className = "border border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed rounded px-3 py-2 text-sm w-full";
         } else {
             inactiveTabBtn.className = "px-6 py-3 font-semibold text-green-700 border-b-4 border-green-700 transition flex items-center gap-2";
             activeTabBtn.className = "px-6 py-3 font-semibold text-gray-500 border-b-4 border-transparent hover:text-green-700 transition flex items-center gap-2";
+            
+            // Remove 'Active' from Inactive Tab options
+            statusFilter.innerHTML = `
+                <option value="">All Statuses</option>
+                <option value="inactive">Inactive</option>
+                <option value="transfered">Transfered</option>
+                <option value="graduated">Graduated</option>
+            `;
+            statusFilter.disabled = false;
+            statusFilter.className = "border border-gray-300 rounded px-3 py-2 text-sm w-full outline-none focus:ring-2 focus:ring-green-500";
+            
+            if (initStatus) {
+                statusFilter.value = initStatus;
+            } else {
+                statusFilter.value = "";
+            }
         }
         applyFilters();
     }
@@ -152,9 +170,9 @@
 
         rows.forEach(row => {
             const rowTabStatus = row.getAttribute('data-tab-status');
-            const rowSport = row.getAttribute('data-sport').toLowerCase();
-            const rowStatus = row.getAttribute('data-status').toLowerCase();
-            const rowClass = row.getAttribute('data-classification').toLowerCase();
+            const rowSport = row.getAttribute('data-sport');
+            const rowStatus = row.getAttribute('data-status');
+            const rowClass = row.getAttribute('data-classification');
             
             const names = Array.from(row.querySelectorAll('.searchable-name')).map(td => td.textContent.toLowerCase()).join(' ');
             const id = row.querySelector('.searchable-id').textContent.toLowerCase();
@@ -175,13 +193,28 @@
         });
     }
 
+    // Event Listeners
     document.getElementById('athleteSearchInput').addEventListener('input', applyFilters);
     document.getElementById('athleteSportFilter').addEventListener('change', applyFilters);
     document.getElementById('athleteStatusFilter').addEventListener('change', applyFilters);
     document.getElementById('athleteClassificationFilter').addEventListener('change', applyFilters);
 
+    // 🚀 READ URL ON LOAD AND AUTO-NAVIGATE
     document.addEventListener("DOMContentLoaded", () => {
-        switchTab('Active');
+        const urlParams = new URLSearchParams(window.location.search);
+        const statusParam = urlParams.get('status') ? urlParams.get('status').toLowerCase() : '';
+
+        if (statusParam === 'alumni') {
+            // Auto-filter classification to Alumni and switch to Inactive tab
+            document.getElementById('athleteClassificationFilter').value = 'alumni';
+            switchTab('Inactive');
+        } else if (['inactive', 'graduated', 'transfered'].includes(statusParam)) {
+            // Auto-filter status and switch to Inactive tab
+            switchTab('Inactive', statusParam);
+        } else {
+            // Default load
+            switchTab('Active');
+        }
     });
 </script>
 

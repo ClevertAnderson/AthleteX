@@ -144,7 +144,6 @@
         </div>
 
         <script>
-            // Simple Tab Switcher Logic
             function switchIncidentTab(tab) {
                 const pendingTabBtn = document.getElementById('tab-pending');
                 const approvedTabBtn = document.getElementById('tab-approved');
@@ -152,17 +151,13 @@
                 const tableApproved = document.getElementById('table-approved');
 
                 if (tab === 'pending') {
-                    // Update Buttons
                     pendingTabBtn.className = "px-6 py-3 font-semibold text-red-700 border-b-4 border-red-700 transition flex items-center gap-2";
                     approvedTabBtn.className = "px-6 py-3 font-semibold text-gray-500 border-b-4 border-transparent hover:text-green-700 transition flex items-center gap-2";
-                    // Toggle Tables
                     tablePending.classList.remove('hidden');
                     tableApproved.classList.add('hidden');
                 } else {
-                    // Update Buttons
                     approvedTabBtn.className = "px-6 py-3 font-semibold text-green-700 border-b-4 border-green-700 transition flex items-center gap-2";
                     pendingTabBtn.className = "px-6 py-3 font-semibold text-gray-500 border-b-4 border-transparent hover:text-red-700 transition flex items-center gap-2";
-                    // Toggle Tables
                     tableApproved.classList.remove('hidden');
                     tablePending.classList.add('hidden');
                 }
@@ -205,13 +200,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $report->created_at->format('M d, Y H:i') }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                <!-- Download Button -->
                                 <a href="{{ route('reports.download', $report->id) }}" class="text-blue-600 hover:text-blue-800" title="Download">
                                     <i class="bi bi-download"></i>
                                 </a>
 
                                 @if($report->status === 'pending')
-                                    <!-- Mark as Received -->
                                     <form method="POST" action="{{ route('reports.mark-received', $report->id) }}" style="display:inline;">
                                         @csrf
                                         @method('PATCH')
@@ -220,7 +213,6 @@
                                         </button>
                                     </form>
 
-                                    <!-- Mark as Rejected -->
                                     <form method="POST" action="{{ route('reports.mark-rejected', $report->id) }}" style="display:inline;">
                                         @csrf
                                         @method('PATCH')
@@ -229,7 +221,6 @@
                                         </button>
                                     </form>
                                 @endif
-
                             </td>
                         </tr>
                     @empty
@@ -245,145 +236,186 @@
 </div>
 
 <!-- ========================================== -->
-<!-- 📝 READ-ONLY DOCUMENT MODALS FOR THE ADMIN -->
+<!-- 📝 FORMAL SDO INCIDENT REPORT MODAL / PRINT -->
 <!-- ========================================== -->
+<style>
+    @media print {
+        /* 1. Completely hide the main dashboard so it takes up zero space */
+        #tab-content {
+            display: none !important;
+        }
+
+        /* 2. Remove the dark shadow overlay from the modal and make it pure white */
+        .modal {
+            background-color: white !important; 
+            padding: 0 !important;
+        }
+
+        /* 3. Stretch the document to fill the paper */
+        .modal-dialog {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        .modal-content {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 4. Hide the close buttons and print buttons */
+        .modal-header, .modal-footer {
+            display: none !important;
+        }
+
+        /* 5. Force the paper size and keep the colors */
+        @page { 
+            size: letter portrait;
+            margin: 0.5in; 
+        }
+        * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+        }
+    }
+</style>
+
 @foreach($incidentReports ?? [] as $incident)
-<!-- NUCLEAR MODAL FIX APPLIED HERE: data-bs-backdrop="false" and manual dark background -->
 <div class="modal fade" id="viewIncidentModal{{ $incident->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.6); z-index: 99999;">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content shadow-2xl rounded-none border-0">
+        <div class="modal-content shadow-2xl rounded-0 border-0">
             
-            <div class="modal-header bg-gray-100 border-b-2 border-black rounded-none">
-                <h5 class="modal-title font-bold text-gray-800 uppercase tracking-widest">
-                    <i class="bi bi-file-earmark-medical me-2"></i> Official Document View
-                </h5>
+            <!-- Web UI Header (Hidden when printing) -->
+            <div class="modal-header bg-light border-bottom print:hidden">
+                <h5 class="modal-title fw-bold text-dark">Document Preview</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            <div class="modal-body p-8 bg-white text-black font-sans print:p-0">
+            <!-- ACTUAL PAPER DOCUMENT START -->
+            <div class="modal-body p-10 bg-white" id="printArea{{ $incident->id }}">
                 
-                <!-- TOP HEADER INFO -->
-                <div class="flex justify-between items-end mb-4">
-                    <div>
-                        <h2 class="text-2xl font-black uppercase tracking-tight">Incident Report Form</h2>
+                <!-- OFFICIAL LETTERHEAD (With Actual Logo) -->
+                <div class="flex justify-between items-end pb-2 border-b-2 border-black mb-4">
+                    <div class="flex items-center">
+                        <!-- Official UC Logo (.png) -->
+                        <img src="{{ asset('images/UC_Official_Logo.png') }}" alt="University of the Cordilleras" class="h-14 object-contain" style="max-width: 300px;">
                     </div>
-                    <div class="text-right text-sm">
-                        <span class="font-bold">IR No.</span>
-                        <span class="ml-2 font-mono underline {{ $incident->insurance_ticket_no ? 'text-black font-bold' : 'text-red-600' }}">
-                            {{ $incident->insurance_ticket_no ?? 'PENDING APPROVAL' }}
-                        </span>
+                    <div class="text-sm font-semibold italic text-black pb-1">
+                        Sports Development Office
                     </div>
                 </div>
 
-                <!-- TOP INCIDENT INFO TABLE -->
-                <table class="w-full border-collapse border border-black mb-4 text-sm">
+                <!-- Document Title -->
+                <div class="text-center mb-6">
+                    <h2 class="text-lg font-black text-black uppercase tracking-widest m-0">Incident Report Form</h2>
+                </div>
+
+                <!-- Traditional Paper Tables -->
+                <table class="w-full border-collapse border border-black text-sm text-black mb-4">
                     <tr>
-                        <td class="border border-black p-2 bg-gray-100 font-bold w-1/3">Incident Title:</td>
-                        <td class="border border-black p-2 font-bold">{{ $incident->incident_title }}</td>
+                        <td class="border border-black p-2 w-1/4 font-bold bg-gray-100">IR Number:</td>
+                        <td class="border border-black p-2 w-1/4 font-mono font-bold">{{ $incident->insurance_ticket_no ?? 'PENDING' }}</td>
+                        <td class="border border-black p-2 w-1/4 font-bold bg-gray-100">Date Submitted:</td>
+                        <td class="border border-black p-2 w-1/4">{{ \Carbon\Carbon::parse($incident->created_at)->format('M d, Y') }}</td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 bg-gray-100 font-bold">Incident Type:</td>
-                        <td class="border border-black p-2">
-                            {{ $incident->incident_type }}
-                            @if($incident->incident_type_specify)
-                                - {{ $incident->incident_type_specify }}
-                            @endif
-                        </td>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Incident Title:</td>
+                        <td class="border border-black p-2" colspan="3">{{ $incident->incident_title }}</td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 bg-gray-100 font-bold">Person/s Involved:</td>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Classification:</td>
+                        <td class="border border-black p-2" colspan="3">{{ $incident->incident_type }} {{ $incident->incident_type_specify ? '- ' . $incident->incident_type_specify : '' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Date Occurred:</td>
+                        <td class="border border-black p-2">{{ \Carbon\Carbon::parse($incident->incident_date)->format('M d, Y') }}</td>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Time Occurred:</td>
+                        <td class="border border-black p-2">{{ \Carbon\Carbon::parse($incident->incident_time)->format('h:i A') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Exact Location:</td>
+                        <td class="border border-black p-2" colspan="3">{{ $incident->exact_location }}</td>
+                    </tr>
+                </table>
+
+                <table class="w-full border-collapse border border-black text-sm text-black mb-4">
+                    <tr>
+                        <td class="border border-black p-2 w-1/4 font-bold bg-gray-100" colspan="2">Persons Involved</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-2 w-1/4 font-bold">Primary Athlete:</td>
+                        <td class="border border-black p-2">{{ $incident->first_name }} {{ $incident->last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-2 w-1/4 font-bold">All Person(s) Involved:</td>
                         <td class="border border-black p-2">{{ $incident->persons_involved }}</td>
                     </tr>
+                </table>
+
+                <table class="w-full border-collapse border border-black text-sm text-black mb-4">
                     <tr>
-                        <td class="border border-black p-2 bg-gray-100 font-bold">Date & Time:</td>
-                        <td class="border border-black p-2">{{ \Carbon\Carbon::parse($incident->incident_date)->format('m/d/Y') }} @ {{ \Carbon\Carbon::parse($incident->incident_time)->format('h:i A') }}</td>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Description of the Incident</td>
                     </tr>
                     <tr>
-                        <td class="border border-black p-2 bg-gray-100 font-bold">Exact Location:</td>
-                        <td class="border border-black p-2">{{ $incident->exact_location }}</td>
+                        <td class="border border-black p-4 align-top whitespace-pre-wrap" style="min-height: 120px;">{{ $incident->incident_details }}</td>
                     </tr>
                 </table>
 
-                <!-- ============================================== -->
-                <!-- EXACT FORM MATCH (NARRATIVE & SIGNATURES)      -->
-                <!-- ============================================== -->
-                <table class="w-full border-collapse border border-black text-sm mb-0">
-                    <tbody>
-                        <!-- Description -->
-                        <tr>
-                            <td class="border border-black bg-gray-100 font-bold text-center py-1">Description of the Incident:</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-black p-4 align-top whitespace-pre-wrap" style="min-height: 120px;">{{ $incident->incident_details }}</td>
-                        </tr>
-                        
-                        <!-- Immediate Actions -->
-                        <tr>
-                            <td class="border border-black bg-gray-100 font-bold text-center py-1">Immediate Action/s Taken:</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-black p-4 align-top whitespace-pre-wrap" style="min-height: 120px;">{{ $incident->immediate_actions }}</td>
-                        </tr>
-                    </tbody>
+                <table class="w-full border-collapse border border-black text-sm text-black mb-8">
+                    <tr>
+                        <td class="border border-black p-2 font-bold bg-gray-100">Immediate Action(s) Taken</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-4 align-top whitespace-pre-wrap" style="min-height: 120px;">{{ $incident->immediate_actions }}</td>
+                    </tr>
                 </table>
 
-                <!-- Signatures Table -->
-                <table class="w-full border-collapse border border-black text-sm border-t-0">
-                    <tbody>
-                        <tr>
-                            <td class="border border-black font-bold p-1 pl-2 w-1/2">Accomplished by</td>
-                            <td class="border border-black font-bold p-1 pl-2 w-1/2">Noted by</td>
-                        </tr>
-                        <tr>
-                            <td class="border border-black h-40 text-center align-bottom pb-2">
-                                <!-- Blank for physical signature -->
-                            </td>
-                            <td class="border border-black h-40 text-center align-middle relative">
-                                @if($incident->status !== 'Pending')
-                                    <!-- Digital Approval Stamp -->
-                                    <div class="inline-block border-2 border-red-600 text-red-600 font-bold uppercase tracking-widest px-4 py-1 rotate-[-5deg] opacity-70">
-                                        SDO Approved
-                                    </div>
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="border border-black text-center text-xs py-2">
-                                <span class="font-bold block text-sm">Reporting Individual</span>
-                                <span>( Name &nbsp;&nbsp;|&nbsp;&nbsp; Signature &nbsp;&nbsp;|&nbsp;&nbsp; Date )</span>
-                            </td>
-                            <td class="border border-black text-center text-xs py-2">
-                                <span class="font-bold block text-sm">SDO Director</span>
-                                <span>( Name &nbsp;&nbsp;|&nbsp;&nbsp; Signature &nbsp;&nbsp;|&nbsp;&nbsp; Date )</span>
-                            </td>
-                        </tr>
-                    </tbody>
+                <!-- Signatures Matching the Physical Form -->
+                <table class="w-full border-collapse text-sm text-black mt-10">
+                    <tr>
+                        <td class="w-1/2 text-center pb-2 px-8">
+                            <div class="border-b border-black w-full mb-1"></div>
+                            <span class="font-bold text-black block text-sm">Reporting Individual</span>
+                            <span class="text-xs text-black italic">Signature over Printed Name</span>
+                        </td>
+                        <td class="w-1/2 text-center pb-2 px-8 relative">
+                            @if($incident->status !== 'Pending')
+                                <!-- Digital Verification Stamp -->
+                                <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 rotate-[-5deg] border-4 border-red-600 text-red-600 font-black uppercase tracking-widest px-4 py-1 opacity-60 text-lg pointer-events-none whitespace-nowrap">
+                                    SDO VERIFIED
+                                </div>
+                            @endif
+                            <div class="border-b border-black w-full mb-1"></div>
+                            <span class="font-bold text-black block text-sm">SDO Director</span>
+                            <span class="text-xs text-black italic">University of the Cordilleras</span>
+                        </td>
+                    </tr>
                 </table>
 
-                <!-- Exact Footer from Document -->
-                <div class="flex justify-between border-t border-black mt-8 pt-1 text-[10px] text-gray-500 font-sans">
+                <!-- Exact Footer text format from your original paper image -->
+                <div class="flex justify-between border-t border-black mt-8 pt-1 text-[10px] text-black font-sans">
                     <div>
-                        UC-SDO-IRF<br>
-                        January 27, 2025 Rev.00
+                        UC-ADM-SDO-FORM-IR<br>
+                        August 17, 2023 Rev. 00
                     </div>
                     <div class="text-right">
                         Page 1 of 1
                     </div>
                 </div>
-                <!-- ============================================== -->
 
             </div>
 
             <!-- Admin Action Buttons (Hidden when printing) -->
-            <div class="modal-footer bg-gray-100 flex justify-between items-center border-t-2 border-black rounded-none print:hidden">
-                <button type="button" class="btn btn-secondary font-bold" data-bs-dismiss="modal">Close Document</button>
+            <div class="modal-footer bg-light border-top p-3 print:hidden">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Close</button>
                 
                 <div class="flex space-x-2">
-                    <button type="button" class="btn btn-outline-dark font-bold shadow-sm" onclick="window.print()">
-                        <i class="bi bi-printer"></i> Print Form
+                    <button type="button" class="btn btn-dark fw-bold shadow-sm" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Document
                     </button>
 
-                    @if($incident->status === 'Pending')
+                    <!-- Only show Approve button if Pending AND user is Admin -->
+                    @if($incident->status === 'Pending' && auth()->check() && auth()->user()->role === 'admin')
                         <form action="/incidents/approve/{{ $incident->id }}" method="POST" class="m-0">
                             @csrf
                             @method('PUT')
