@@ -1,6 +1,16 @@
+FROM node:20-alpine AS assets
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+
 FROM richarvey/nginx-php-fpm:3.1.6
 
 COPY . .
+COPY --from=assets /app/public/build ./public/build
 
 # Image config
 ENV WEBROOT /var/www/html/public
