@@ -6,7 +6,7 @@
     <title>ATHLETIX Login</title>
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
     <!-- offline tailwind css below -->
-     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css']); ?> 
+     <link rel="stylesheet" href="<?php echo e(asset('build/assets/app.css')); ?>"> 
 </head>
 <body class="flex flex-col items-center min-h-screen bg-gradient-to-br from-green-900 to-green-800">
 

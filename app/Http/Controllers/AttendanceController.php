@@ -31,10 +31,12 @@ class AttendanceController extends Controller
             $query->where('sport_event', $coachSport);
         })->get();
 
-        // 3. ONLY ACTIVE ATHLETES
+        // 3. ONLY ACTIVE ATHLETES (Ordered Alphabetically)
         $athletes = \App\Models\Athlete::where('sport_event', $coachSport)
             ->where('status', 'Active')
             ->where('classification', '!=', 'Tryout')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
             ->get();
 
         // 4. Enrich athletes with today's attendance status
@@ -107,13 +109,17 @@ class AttendanceController extends Controller
                 ];
             })->values();
         } else {
-            // DATE VIEW (Today OR Past Date): Show the FULL active roster
+            // DATE VIEW (Today OR Past Date): Show the FULL active roster ordered alphabetically per sport
             $athletes = \App\Models\Athlete::where('approval_status', 'approved')
                 ->where('status', 'Active')
                 ->where('classification', '!=', 'Tryout')
                 ->when($sportName, function($q) use ($sportName) {
                     $q->where('sport_event', $sportName);
-                })->get();
+                })
+                ->orderBy('sport_event')
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get();
 
             $athletesWithStatus = $athletes->map(function ($athlete) use ($targetDate) {
                 $attendance = $athlete->attendances()
@@ -191,14 +197,23 @@ class AttendanceController extends Controller
 
         $sports = collect();
         $sportId = null;
+        $sportName = null;
 
+        // Fetch the raw attendance logs for mapping later
         if(auth()->user()->role === 'admin') {
             $sportId = $request->query('sport_id');
+            if ($sportId && is_numeric($sportId)) {
+                $sportModel = \App\Models\Sport::find($sportId);
+                $sportName = $sportModel ? $sportModel->name : null;
+            } else {
+                $sportName = $sportId;
+            }
+
             $attendances = \App\Models\Attendance::with('athlete')
                 ->whereBetween('date', [$start, $end])
-                ->when($sportId, function($q) use ($sportId) {
-                    $q->whereHas('athlete', function($q2) use ($sportId) {
-                        $q2->where('sport_event', $sportId);
+                ->when($sportName, function($q) use ($sportName) {
+                    $q->whereHas('athlete', function($q2) use ($sportName) {
+                        $q2->where('sport_event', $sportName);
                     });
                 })->get();
             $sports = \App\Models\Sport::all(); 
@@ -212,13 +227,26 @@ class AttendanceController extends Controller
                 ->get();
         }
 
-        $athletes = $attendances->pluck('athlete')
-            ->filter()
-            ->unique('id')
-            ->values(); 
+        // FIX: Pull directly from the Master Athlete list instead of the attendance logs.
+        // This guarantees all active athletes show up (preventing missing rows) and prevents duplicate names!
+        $athleteQuery = \App\Models\Athlete::where('approval_status', 'approved')
+            ->where('classification', '!=', 'Tryout')
+            ->orderBy('sport_event') // Group by Sport
+            ->orderBy('first_name')
+            ->orderBy('last_name');
+
+        if (auth()->user()->role === 'admin' && $sportName) {
+            $athleteQuery->where('sport_event', $sportName);
+        } elseif (auth()->user()->role === 'coach') {
+            $coachSport = auth()->user()->coach->coach_sport_event ?? null;
+            $athleteQuery->where('sport_event', $coachSport);
+        }
+
+        $athletes = $athleteQuery->get();
 
         $attendanceMap = [];
         foreach($attendances as $attendance){
+            // Create a unique key for mapping: athleteID_Date
             $key = $attendance->athlete_id . '_' . \Carbon\Carbon::parse($attendance->date)->format('Y-m-d');
             $attendanceMap[$key] = $attendance;
         }

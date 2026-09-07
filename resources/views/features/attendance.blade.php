@@ -80,44 +80,48 @@
         @endif
 
         <!-- UNIFIED Attendance Table -->
-        <div class="bg-[#f8f9fa] rounded shadow p-6 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-[#d1e9f0]">
+        <div class="bg-white rounded shadow border border-gray-300 overflow-x-auto">
+            <!-- Added 'table-fixed' so columns never shift -->
+            <table class="min-w-full divide-y divide-gray-300 table-fixed">
+                <thead class="bg-[#d1e9f0] border-b border-gray-300">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Athlete</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sport</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remarks</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <!-- Added strict widths to every column (w-12, w-1/4, w-1/6) -->
+                        <th class="w-12 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase border-r border-gray-200">#</th>
+                        <th class="w-1/4 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase border-r border-gray-200">Athlete</th>
+                        <th class="w-1/6 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase border-r border-gray-200">Sport</th>
+                        <th class="w-1/6 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase border-r border-gray-200">Status</th>
+                        <th class="w-1/4 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase border-r border-gray-200">Remarks</th>
+                        <th class="w-1/6 px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">Date</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <!-- Now BOTH Admins and Coaches use the enriched array -->
                     @forelse($athletesWithStatus as $index => $athlete)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $index + 1 }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $athlete['first_name'] }} {{ $athlete['last_name'] }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $athlete['sport_event'] }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                        <tr class="hover:bg-blue-50 transition-colors {{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
+                            <td class="px-6 py-3 whitespace-nowrap text-sm border-r border-gray-200">{{ $index + 1 }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">{{ $athlete['first_name'] }} {{ $athlete['last_name'] }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">{{ $athlete['sport_event'] }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap border-r border-gray-200">
                                 @if(strtolower($athlete['status']) === 'present')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Present</span>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-green-100 text-green-800 border border-green-200">Present</span>
                                 @elseif(strtolower($athlete['status']) === 'absent')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Absent</span>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-red-100 text-red-800 border border-red-200">Absent</span>
                                 @elseif(strtolower($athlete['status']) === 'late')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Late</span>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">Late</span>
                                 @elseif(strtolower($athlete['status']) === 'excused')
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Excused</span>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Excused</span>
                                 @else
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Not Marked</span>
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-gray-500 border border-gray-200">Not Marked</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $athlete['remarks'] ?? '—' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">{{ $athlete['attendance_date'] }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 border-r border-gray-200">{{ $athlete['remarks'] ?? '—' }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600">
+                                {{ \Carbon\Carbon::parse($athlete['attendance_date'])->format('Y-m-d') }}
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">No athletes found for this filter.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500 font-medium">No athletes found for this filter.</td>
                         </tr>
                     @endforelse
                 </tbody>

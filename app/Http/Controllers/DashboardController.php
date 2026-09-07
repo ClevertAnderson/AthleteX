@@ -51,7 +51,7 @@ class DashboardController extends Controller
         $activeSports = \App\Models\Sport::count();
 
         $achievementsMonthly = Achievement::select(
-                DB::raw('MONTH(created_at) as month'),
+                DB::raw('EXTRACT(MONTH FROM created_at) as month'),
                 DB::raw('COUNT(*) as count')
             )
             ->groupBy('month')
