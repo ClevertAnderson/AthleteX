@@ -26,4 +26,8 @@ ENV LOG_CHANNEL stderr
 # Allow composer to run as root
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
-CMD ["/start.sh"]
+# Copy custom deployment script, make it executable, and run it
+COPY render-start.sh /render-start.sh
+RUN chmod +x /render-start.sh
+
+CMD ["/render-start.sh"]
