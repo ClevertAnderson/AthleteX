@@ -10,25 +10,24 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // Create an Admin user
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('admin123'),
-            'role' => 'admin', 
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('admin123'),
+                'role' => 'admin',
+            ]
+        );
 
-        // Create a Coach/User
-        User::factory()->create([
-            'name' => 'Delson',
-            'email' => 'delson@gmail.com',
-            'password' => bcrypt('coach123'),
-            'role' => 'coach', 
-        ]);
+        User::firstOrCreate(
+            ['email' => 'delson@gmail.com'],
+            [
+                'name' => 'Delson',
+                'password' => bcrypt('coach123'),
+                'role' => 'coach',
+            ]
+        );
     }
 }
