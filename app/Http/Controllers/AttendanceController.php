@@ -85,15 +85,21 @@ class AttendanceController extends Controller
         // ==========================================
         if (!empty($month)) {
             // MONTH VIEW: Show only actual recorded data for the month
-            $query = \App\Models\Attendance::with('athlete');
+            $query = \App\Models\Attendance::select('attendances.*')
+                ->join('athletes', 'attendances.athlete_id', '=', 'athletes.id')
+                ->with('athlete');
 
             if ($sportName) {
-                $query->whereHas('athlete', function($q) use ($sportName) {
-                    $q->where('sport_event', $sportName);
-                });
+                $query->where('athletes.sport_event', $sportName);
             }
-            $query->whereMonth('date', $month);
-            $attendances = $query->orderBy('date', 'desc')->get();
+            $query->whereMonth('attendances.date', $month);
+            
+            // FIX: Force the Month view to sort exactly like the Date view
+            $attendances = $query->orderBy('athletes.sport_event', 'asc')
+                ->orderBy('athletes.last_name', 'asc')
+                ->orderBy('athletes.first_name', 'asc')
+                ->orderBy('attendances.date', 'desc') // Keep date as a secondary sort
+                ->get();
 
             $athletesWithStatus = $attendances->filter(function($att) {
                 return $att->athlete != null;
@@ -232,8 +238,8 @@ class AttendanceController extends Controller
         $athleteQuery = \App\Models\Athlete::where('approval_status', 'approved')
             ->where('classification', '!=', 'Tryout')
             ->orderBy('sport_event') // Group by Sport
-            ->orderBy('first_name')
-            ->orderBy('last_name');
+            ->orderBy('last_name')
+            ->orderBy('first_name');
 
         if (auth()->user()->role === 'admin' && $sportName) {
             $athleteQuery->where('sport_event', $sportName);

@@ -99,7 +99,7 @@
                     @forelse($athletesWithStatus as $index => $athlete)
                         <tr class="hover:bg-blue-50 transition-colors {{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
                             <td class="px-6 py-3 whitespace-nowrap text-sm border-r border-gray-200">{{ $index + 1 }}</td>
-                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">{{ $athlete['first_name'] }} {{ $athlete['last_name'] }}</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">{{ $athlete['last_name'] }}, {{ $athlete['first_name'] }}</td>
                             <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200">{{ $athlete['sport_event'] }}</td>
                             <td class="px-6 py-3 whitespace-nowrap border-r border-gray-200">
                                 @if(strtolower($athlete['status']) === 'present')
@@ -177,7 +177,7 @@
                                     @foreach($athletes as $index => $athlete)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $athlete->first_name }} {{ $athlete->last_name }}</td>
+                                        <td>{{ $athlete->last_name }}, {{ $athlete->first_name }}</td>
                                         <td>{{ $athlete->sport_event }}</td>
                                         <td>
                                             <input type="hidden" name="attendance[{{ $athlete->id }}][status]" value="present" class="attendance-hidden">

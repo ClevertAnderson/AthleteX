@@ -99,7 +99,7 @@
                     <?php $__empty_1 = true; $__currentLoopData = $athletesWithStatus; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $athlete): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr class="hover:bg-blue-50 transition-colors <?php echo e($index % 2 == 0 ? 'bg-white' : 'bg-gray-50'); ?>">
                             <td class="px-6 py-3 whitespace-nowrap text-sm border-r border-gray-200"><?php echo e($index + 1); ?></td>
-                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200"><?php echo e($athlete['first_name']); ?> <?php echo e($athlete['last_name']); ?></td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200"><?php echo e($athlete['last_name']); ?>, <?php echo e($athlete['first_name']); ?></td>
                             <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600 border-r border-gray-200"><?php echo e($athlete['sport_event']); ?></td>
                             <td class="px-6 py-3 whitespace-nowrap border-r border-gray-200">
                                 <?php if(strtolower($athlete['status']) === 'present'): ?>
@@ -178,7 +178,7 @@
                                     <?php $__currentLoopData = $athletes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $athlete): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
                                         <td><?php echo e($index + 1); ?></td>
-                                        <td><?php echo e($athlete->first_name); ?> <?php echo e($athlete->last_name); ?></td>
+                                        <td><?php echo e($athlete->last_name); ?>, <?php echo e($athlete->first_name); ?></td>
                                         <td><?php echo e($athlete->sport_event); ?></td>
                                         <td>
                                             <input type="hidden" name="attendance[<?php echo e($athlete->id); ?>][status]" value="present" class="attendance-hidden">
