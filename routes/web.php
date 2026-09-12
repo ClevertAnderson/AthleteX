@@ -58,6 +58,9 @@ Route::post('/login', function (Request $request) {
     return back()->withErrors(['email' => 'Invalid credentials.']);
 })->name('login');
 
+Route::get('/register', [\App\Http\Controllers\AthleteRegistrationController::class, 'create'])->name('public.athlete.register');
+Route::post('/register', [\App\Http\Controllers\AthleteRegistrationController::class, 'store'])->name('public.athlete.store');
+
 // ==============================================================
 // PUBLIC TRYOUT & ALUMNI REGISTRATION
 // ==============================================================

@@ -23,17 +23,12 @@
             <input type="text" id="coachSearchInput" placeholder="Search name, ID…" 
                 class="border border-gray-300 rounded px-3 py-2 text-sm w-full focus:ring-2 focus:ring-green-500 outline-none">
 
-            <!-- Sports Select -->
+            <!-- Sports Select (Dynamic from Sport Model) -->
             <select id="coachSportFilter" class="border border-gray-300 rounded px-3 py-2 text-sm w-full">
                 <option value="">All Sports</option>
-                <option value="Basketball">Basketball</option>
-                <option value="Volleyball">Volleyball</option>
-                <option value="Athletics">Athletics</option>
-                <option value="Swimming">Swimming</option>
-                <option value="Taekwondo">Taekwondo</option>
-                <option value="Chess">Chess</option>
-                <option value="Football">Football</option>
-                <option value="Boxing">Boxing</option>
+                @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
+                    <option value="{{ $sport->name }}">{{ $sport->name }}</option>
+                @endforeach
             </select>
 
             <!-- Status Select -->
@@ -57,19 +52,19 @@
         </div>
     </div>
 
-    <!-- 🚀 CLEANED UP TABLE -->
-    <div class="bg-white rounded-xl shadow overflow-hidden border">
-        <div class="overflow-x-auto">
-        <table class="w-full table-auto text-sm whitespace-nowrap" id="coachTable">
+    <!-- 🚀 CLEANED UP STABLE TABLE -->
+    <div class="bg-white rounded-xl shadow border min-h-[600px] flex flex-col overflow-hidden">
+        <div class="overflow-x-auto flex-1">
+        <table class="w-full table-fixed text-sm whitespace-nowrap" id="coachTable">
             <thead class="bg-gray-100 text-gray-700">
                 <tr>
-                    <th class="px-4 py-3 border-b text-center">Photo</th>
-                    <th class="px-4 py-3 border-b text-left">Coach ID</th>
-                    <th class="px-4 py-3 border-b text-left">Full Name</th>
-                    <th class="px-4 py-3 border-b text-left">Sports Event</th>
-                    <th class="px-4 py-3 border-b text-left">Position</th>
-                    <th class="px-4 py-3 border-b text-center">Status</th>
-                    <th class="px-4 py-3 border-b text-center sticky right-0 bg-gray-100 z-10 shadow-sm">Actions</th>
+                    <th class="px-2 py-3 border-b text-center w-[10%]">Photo</th>
+                    <th class="px-4 py-3 border-b text-left w-[10%]">Coach ID</th>
+                    <th class="px-4 py-3 border-b text-left w-[25%]">Full Name</th>
+                    <th class="px-4 py-3 border-b text-left w-[20%]">Sports Event</th>
+                    <th class="px-4 py-3 border-b text-left w-[15%]">Position</th>
+                    <th class="px-4 py-3 border-b text-center w-[10%]">Status</th>
+                    <th class="px-4 py-3 border-b text-center w-[10%] sticky right-0 bg-gray-100 z-10 shadow-sm">Actions</th>
                 </tr>
             </thead>
 
@@ -83,7 +78,7 @@
                         data-sport="{{ $coach->coach_sport_event }}"
                         data-position="{{ $coach->position }}">
                         
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-2 py-3 text-center">
                             @if($coach->coach_picture)
                                 <img src="{{ asset('storage/' . $coach->coach_picture) }}" class="w-10 h-10 object-cover rounded-full mx-auto border border-gray-300 shadow-sm">
                             @else
@@ -93,15 +88,15 @@
                             @endif
                         </td>
 
-                        <td class="px-4 py-3 text-gray-600 searchable-id font-medium">{{ $coach->id }}</td>
+                        <td class="px-4 py-3 text-gray-600 searchable-id font-medium truncate">{{ $loop->iteration }}</td>
                         
                         <!-- Combined Name Column -->
-                        <td class="px-4 py-3 font-semibold text-gray-900 searchable-name">
+                        <td class="px-4 py-3 font-semibold text-gray-900 searchable-name truncate" title="{{ $coach->coach_last_name }}, {{ $coach->coach_first_name }} {{ $coach->coach_middle_initial }}.">
                             {{ $coach->coach_last_name }}, {{ $coach->coach_first_name }} {{ $coach->coach_middle_initial }}.
                         </td>
                         
-                        <td class="px-4 py-3 text-gray-700">{{ $coach->coach_sport_event }}</td>
-                        <td class="px-4 py-3 text-gray-700">{{ $coach->position ?: 'Coach' }}</td>
+                        <td class="px-4 py-3 text-gray-700 truncate" title="{{ $coach->coach_sport_event }}">{{ $coach->coach_sport_event }}</td>
+                        <td class="px-4 py-3 text-gray-700 truncate" title="{{ $coach->position ?: 'Coach' }}">{{ $coach->position ?: 'Coach' }}</td>
                         
                         <td class="px-4 py-3 text-center">
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $statusText === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800' }}">
@@ -111,7 +106,7 @@
                         
                         <td class="px-4 py-3 text-center sticky right-0 bg-white z-10 shadow-sm border-l">
                             <a href="{{ route('coaches.create', ['coach_id' => $coach->id]) }}" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-xs font-semibold transition flex items-center justify-center gap-1">
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-xs font-semibold transition flex items-center justify-center gap-1 w-20 mx-auto">
                                 <i class="bi bi-eye"></i> View
                             </a>
                         </td>
@@ -148,7 +143,7 @@
             const matchesSearch = names.includes(searchInput) || id.includes(searchInput);
 
             if (matchesSearch &&
-                (sportFilter === "" || rowSport.includes(sportFilter)) &&
+                (sportFilter === "" || rowSport === sportFilter) &&
                 (statusFilter === "" || rowStatus === statusFilter) &&
                 (positionFilter === "" || rowPosition === positionFilter)) {
                 row.style.display = '';

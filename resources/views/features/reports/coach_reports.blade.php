@@ -349,7 +349,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="uploadReportModal" tabindex="-1">
+<div class="modal fade" id="uploadReportModal" tabindex="-1" aria-labelledby="uploadReportModalLabel" aria-hidden="true" data-bs-backdrop="false" style="background-color: rgba(0, 0, 0, 0.6); z-index: 105000;">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 

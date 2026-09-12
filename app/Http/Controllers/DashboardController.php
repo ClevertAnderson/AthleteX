@@ -16,47 +16,72 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // 1. Start a base query
-        $athleteQuery = Athlete::query();
+        // 1. BASE QUERY: Only count athletes who are fully APPROVED and NOT Tryouts
+        $baseAthleteQuery = Athlete::where('approval_status', 'approved')
+                                   ->where('classification', '!=', 'Tryout');
 
         // 2. 🔒 STRICT RBAC CHECK: Lock the query down to ONLY their sport!
         if ($user->role === 'coach') {
-            $coachSport = $user->coach->coach_sport_event ?? null;
+            $coachSport = $user->coach->coach_sport_event ?? ($user->coach_sport ?? null);
             
             if ($coachSport) {
-                $athleteQuery->where('sport_event', $coachSport);
+                $baseAthleteQuery->where('sport_event', $coachSport);
             } else {
-                $athleteQuery->whereNull('id'); 
+                $baseAthleteQuery->whereNull('id'); 
             }
         }
 
-        // 3. Now do the counts using the (clone) trick. 
-        $activeAthletesCount = \App\Models\Athlete::where('status', 'Active')->count();
-
-        $alumniCount = (clone $athleteQuery)
-            ->where('status', 'Graduated') 
+        // 3. Exact matching counts (Now guaranteed to match the list view!)
+        
+        // ACTIVE
+        $activeAthletesCount = (clone $baseAthleteQuery)
+            ->where('status', 'Active')
+            ->where('classification', '!=', 'Alumni')
             ->count();
 
-        $inactive = (clone $athleteQuery)
+        // ALUMNI
+        $alumniCount = (clone $baseAthleteQuery)
+            ->where('classification', 'Alumni')
+            ->count();
+
+        // INACTIVE
+        $inactive = (clone $baseAthleteQuery)
             ->where('status', 'Inactive')
+            ->where('classification', '!=', 'Alumni')
             ->count();
+
+        // PENDING: For the Admin (Uses a separate query because they are NOT approved)
+        $pendingApprovals = Athlete::where('approval_status', 'pending')->count();
 
         // 4. Global Stats
         $coachesCount = Coach::count();
-        $totalAchievements = Achievement::count();
+        $activeSports = Sport::count();
 
-        // 🚀 METRICS FOR THE BALANCED DASHBOARD GRID (Counts ALL pending items: Tryouts + Student Requests)
-        $pendingApprovals = Athlete::where('approval_status', 'pending')->count();
-        
-        $activeSports = \App\Models\Sport::count();
+        // ACHIEVEMENTS: Scoped to the Coach's athletes if they are a Coach
+        if ($user->role === 'coach') {
+            $coachSport = $user->coach->coach_sport_event ?? ($user->coach_sport ?? null);
+            
+            // Get all athletes for this sport (even pending) so coaches see all their earned achievements
+            $athleteIds = Athlete::where('sport_event', $coachSport)->pluck('id');
+            
+            $totalAchievements = Achievement::whereIn('athlete_id', $athleteIds)->count();
+            
+            $achievementsMonthly = Achievement::whereIn('athlete_id', $athleteIds)
+                ->select(DB::raw('EXTRACT(MONTH FROM created_at) as month'), DB::raw('COUNT(*) as count'))
+                ->groupBy('month')
+                ->pluck('count', 'month');
+        } else {
+            $totalAchievements = Achievement::count();
+            
+            $achievementsMonthly = Achievement::select(DB::raw('EXTRACT(MONTH FROM created_at) as month'), DB::raw('COUNT(*) as count'))
+                ->groupBy('month')
+                ->pluck('count', 'month');
+        }
 
-        $achievementsMonthly = Achievement::select(
-                DB::raw('EXTRACT(MONTH FROM created_at) as month'),
-                DB::raw('COUNT(*) as count')
-            )
-            ->groupBy('month')
-            ->pluck('count', 'month');
-
-        return view('features.dashboard', compact('activeAthletesCount', 'alumniCount', 'coachesCount', 'inactive', 'pendingApprovals', 'activeSports', 'totalAchievements', 'achievementsMonthly'));
+        return view('features.dashboard', compact(
+            'activeAthletesCount', 'alumniCount', 'coachesCount', 
+            'inactive', 'pendingApprovals', 'activeSports', 
+            'totalAchievements', 'achievementsMonthly'
+        ));
     }
 }

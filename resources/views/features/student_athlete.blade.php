@@ -443,6 +443,7 @@
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Classification</label>
                                     <select name="classification" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
                                         <option value="">-- Select Classification --</option>
+                                        <option value="Regular">Regular</option>
                                         <option value="Class_A">Class A</option>
                                         <option value="Class_B">Class B</option>
                                         <option value="Class_C">Class C</option>
@@ -602,6 +603,7 @@
                                 <label class="block text-white font-medium mb-1 text-sm">Classification</label>
                                 <select name="classification" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
                                     <option value="">-- Select Classification --</option>
+                                    <option value="Regular">Regular (No Discount)</option>
                                     <option value="Class_A">Class A (100% Discount)</option>
                                     <option value="Class_B">Class B (75% Discount)</option>
                                     <option value="Class_C">Class C (50% Discount)</option>

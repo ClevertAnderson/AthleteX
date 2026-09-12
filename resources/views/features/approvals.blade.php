@@ -141,7 +141,7 @@
                                 <tbody>
                                     @foreach($tryoutPendings as $p)
                                     <tr class="athlete-row">
-                                        <td class="ps-4 fw-bold text-dark">{{ $p->first_name }} {{ $p->last_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $p->last_name }}, {{ $p->first_name }} {{ $p->middle_initial }}</td>
                                         <td>
                                             <span class="text-dark small"><i class="fas fa-envelope me-1"></i> {{ $p->email }}</span><br>
                                             <span class="text-muted small"><i class="fas fa-phone me-1"></i> {{ $p->contact_number ?? 'N/A' }}</span>
@@ -214,7 +214,7 @@
                                 <tbody>
                                     @foreach($studentRequests as $req)
                                     <tr class="athlete-row">
-                                        <td class="ps-4 fw-bold text-dark">{{ $req->first_name }} {{ $req->last_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $req->last_name }}, {{ $req->first_name }} {{ $req->middle_initial }}</td>
                                         <td class="text-secondary">{{ $req->student_id }}</td>
                                         <td class="sport-cell-container">
                                             <span class="badge bg-success px-2 py-1 mb-1 sport-cell">{{ str_replace('_', ' ', $req->sport_event) }}</span><br>
@@ -230,7 +230,8 @@
                                                 </button>
                                                 <form action="{{ route('admin.approve.athlete', $req->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-success btn-sm px-3" onclick="return confirm('Approve this athlete profile to the active roster?')">
+                                                    <button type="button" class="btn btn-success btn-sm px-3" 
+                                                            onclick="openApprovalModal({{ $req->id }}, '{{ addslashes($req->first_name . ' ' . $req->last_name) }}', '{{ $req->classification }}')">
                                                         <i class="fas fa-check me-1"></i> Approve
                                                     </button>
                                                 </form>
@@ -291,7 +292,7 @@
                                 <tbody>
                                     @foreach($alumniPendings as $alumni)
                                     <tr class="athlete-row">
-                                        <td class="ps-4 fw-bold text-dark">{{ $alumni->first_name }} {{ $alumni->last_name }}</td>
+                                        <td class="ps-4 fw-bold text-dark">{{ $alumni->last_name }}, {{ $alumni->first_name }} {{ $alumni->middle_initial }}</td>
                                         <td>
                                             <span class="badge bg-success px-2 py-1 mb-1 sport-cell">{{ str_replace('_', ' ', $alumni->sport_event) }}</span><br>
                                             <span class="text-muted small">Batch {{ $alumni->year_graduated ?? 'N/A' }}</span>
@@ -305,7 +306,8 @@
                                             <div class="d-flex justify-content-center gap-2">
                                                 <form action="{{ route('admin.approve.alumni', $alumni->id) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="btn btn-success btn-sm px-3" onclick="return confirm('Approve this alumni and update their master record?')">
+                                                    <button type="button" class="btn btn-success btn-sm px-3" 
+                                                            onclick="openApprovalModal({{ $req->id }}, '{{ addslashes($req->first_name . ' ' . $req->last_name) }}', '{{ $req->classification }}')">
                                                         <i class="fas fa-check me-1"></i> Approve
                                                     </button>
                                                 </form>
@@ -444,7 +446,10 @@
             return response.json();
         })
         .then(data => {
-            document.getElementById('modalName').innerText = `${data.first_name} ${data.last_name}`;
+            // Updated dynamically format name in the modal popup
+            let mi = data.middle_initial ? ' ' + data.middle_initial : '';
+            document.getElementById('modalName').innerText = `${data.last_name}, ${data.first_name}${mi}`;
+            
             document.getElementById('modalSport').innerText = data.sport_event ? data.sport_event.replace('_', ' ') : 'N/A';
             document.getElementById('modalClass').innerText = data.classification ? data.classification.replace('_', ' ') : 'N/A';
             document.getElementById('modalStudentId').innerText = data.student_id || 'N/A';
@@ -476,6 +481,160 @@
             athleteModal.hide();
         });
     }
+</script>
+
+<!-- ========================================== -->
+<!-- SCHOLARSHIP APPROVAL CALCULATOR MODAL -->
+<!-- ========================================== -->
+<div class="modal fade" id="scholarshipModal" tabindex="-1" aria-labelledby="scholarshipModalLabel" aria-hidden="true" data-bs-backdrop="false" style="background-color: rgba(0, 0, 0, 0.6); z-index: 105000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header text-white" style="background-color: #2e4e1f;">
+                <h5 class="modal-title fw-bold" id="scholarshipModalLabel">
+                    <i class="fas fa-calculator me-2"></i> Scholarship Assessment & Approval
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form id="approveAthleteForm" method="POST" action="">
+                @csrf
+                <div class="modal-body p-4 bg-light">
+                    <!-- Name Banner -->
+                    <div class="alert alert-info border-info border-start border-4 bg-white shadow-sm mb-4">
+                        <h5 class="fw-bold mb-0 text-dark" id="calcAthleteName">Athlete Name</h5>
+                    </div>
+
+                    <!-- Classification Dropdown -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold text-success"><i class="fas fa-star me-1"></i> Set Scholarship Classification <span class="text-danger">*</span></label>
+                            <select name="classification" id="calcClassification" class="form-select form-select-lg fw-bold shadow-sm calc-trigger" style="border-color: #4F6228;" required>
+                                <option value="Regular">Regular (No Discount)</option>
+                                <option value="Class_A">Class A (100% Tuition + 100% Misc)</option>
+                                <option value="Class_B">Class B (100% Tuition Only)</option>
+                                <option value="Class_C">Class C (75% Tuition Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">Academic Year <span class="text-danger">*</span></label>
+                            <input type="text" name="academic_year" class="form-control" placeholder="e.g. 2026-2027" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">Total Units</label>
+                            <input type="number" name="total_units" class="form-control" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">Tuition Fee (₱) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="tuition_fee" id="calcTuition" class="form-control calc-trigger" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">Misc Fee (₱) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="miscellaneous_fee" id="calcMisc" class="form-control calc-trigger" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">Other Charges (₱)</label>
+                            <input type="number" step="0.01" name="other_charges" id="calcOther" class="form-control calc-trigger" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <hr class="text-muted">
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-dark">Total Assessment</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">₱</span>
+                                <input type="text" name="total_assessment" id="calcTotalAssess" class="form-control bg-white text-dark fw-bold" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-success">Total Discount</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-success text-white">₱</span>
+                                <input type="text" name="total_discount" id="calcTotalDiscount" class="form-control bg-white text-success fw-bold" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-danger">Net Payable</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-danger text-white">₱</span>
+                                <input type="text" id="calcNetPayable" class="form-control bg-white text-danger fw-bold" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top-0">
+                    <button type="button" class="btn btn-outline-secondary fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success fw-bold px-4"><i class="fas fa-check-circle me-1"></i> Approve & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openApprovalModal(athleteId, athleteName, classification) {
+        let form = document.getElementById('approveAthleteForm');
+        form.action = `/admin/approvals/${athleteId}/approve`; 
+        
+        document.getElementById('calcAthleteName').innerText = athleteName;
+        
+        // Auto-select dropdown using the exact "Class_X" values
+        let cleanClass = classification ? classification.trim().toUpperCase() : '';
+        let selectElement = document.getElementById('calcClassification');
+        
+        if (cleanClass.includes('A')) selectElement.value = 'Class_A';
+        else if (cleanClass.includes('B')) selectElement.value = 'Class_B';
+        else if (cleanClass.includes('C')) selectElement.value = 'Class_C';
+        else selectElement.value = 'Regular'; 
+
+        document.getElementById('calcTuition').value = '';
+        document.getElementById('calcMisc').value = '';
+        document.getElementById('calcOther').value = '';
+        
+        calculateFees(); 
+
+        var myModal = new bootstrap.Modal(document.getElementById('scholarshipModal'));
+        myModal.show();
+    }
+
+    function calculateFees() {
+        let tuition = parseFloat(document.getElementById('calcTuition').value) || 0;
+        let misc = parseFloat(document.getElementById('calcMisc').value) || 0;
+        let other = parseFloat(document.getElementById('calcOther').value) || 0;
+        let classification = document.getElementById('calcClassification').value;
+
+        let totalAssessment = tuition + misc + other;
+        let totalDiscount = 0;
+
+        // Apply rules using exact "Class_X" values
+        if (classification === 'Class_A') {
+            totalDiscount = tuition + misc; 
+        } else if (classification === 'Class_B') {
+            totalDiscount = tuition; 
+        } else if (classification === 'Class_C') {
+            totalDiscount = tuition * 0.75; 
+        } else {
+            totalDiscount = 0;
+        }
+
+        let netPayable = totalAssessment - totalDiscount;
+
+        document.getElementById('calcTotalAssess').value = totalAssessment.toFixed(2);
+        document.getElementById('calcTotalDiscount').value = totalDiscount.toFixed(2);
+        document.getElementById('calcNetPayable').value = netPayable.toFixed(2);
+    }
+
+    document.querySelectorAll('.calc-trigger').forEach(item => {
+        item.addEventListener('input', calculateFees);
+        item.addEventListener('change', calculateFees);
+    });
 </script>
 
 @endsection

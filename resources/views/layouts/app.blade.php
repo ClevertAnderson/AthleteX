@@ -11,6 +11,19 @@
     {{-- Local Bootstrap CSS (Offline) --}}
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
 
+    {{-- Force Ma'am Daph's Official SDO Green Globally --}}
+    <style>
+        .bg-green-500, .bg-green-600, .bg-green-700, .bg-green-800 { background-color: #16592D !important; }
+        .text-green-500, .text-green-600, .text-green-700, .text-green-800 { color: #16592D !important; }
+        .border-green-500, .border-green-600, .border-green-700, .border-green-800 { border-color: #16592D !important; }
+        
+        /* Hover States (Slightly darker shade for a natural click effect) */
+        .hover\:bg-green-500:hover, .hover\:bg-green-600:hover, .hover\:bg-green-700:hover { background-color: #104221 !important; }
+        .hover\:text-green-500:hover, .hover\:text-green-600:hover, .hover\:text-green-700:hover { color: #104221 !important; }
+        
+        /* Focus Rings */
+        .focus\:ring-green-400:focus, .focus\:ring-green-500:focus, .focus\:ring-green-600:focus { box-shadow: 0 0 0 2px #16592D !important; }
+    </style>
 </head>
 <body class="bg-gray-50">
 

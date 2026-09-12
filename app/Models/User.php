@@ -18,10 +18,7 @@ class User extends Authenticatable
         'role',
         'coach_id',
         'coach_sport',
-        'role',
-        'coach_id',
-        'coach_sport',
-        'permissions', // Make sure this is added!
+        'permissions', 
     ];
 
     protected $hidden = [
