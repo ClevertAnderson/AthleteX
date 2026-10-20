@@ -40,7 +40,7 @@
         </div>
 
         <!-- TABS NAVIGATION -->
-        <nav class="flex border-b-2 border-gray-200 mb-4">
+        <nav class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2  -2 border-gray-200 mb-4">
             <button id="tab-pending" onclick="switchIncidentTab('pending')" 
                 class="px-6 py-3 font-semibold text-red-700 border-b-4 border-red-700 transition flex items-center gap-2">
                 <i class="bi bi-hourglass-split"></i> Pending Reports
@@ -53,7 +53,7 @@
 
         <!-- PENDING TABLE TAB -->
         <div id="table-pending" class="bg-white rounded shadow p-6 overflow-x-auto mb-8 border-t-4 border-red-600 transition-all">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 whitespace-nowrap">
                 <thead class="bg-red-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase">ID</th>
@@ -102,7 +102,7 @@
 
         <!-- APPROVED TABLE TAB -->
         <div id="table-approved" class="hidden bg-white rounded shadow p-6 overflow-x-auto mb-8 border-t-4 border-green-600 transition-all">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 whitespace-nowrap">
                 <thead class="bg-green-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase">ID</th>
@@ -168,7 +168,7 @@
         <!-- Standard Reports Table -->
         <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Standard Coach Reports</h3>
         <div class="bg-white rounded shadow p-6 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 whitespace-nowrap">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
@@ -295,7 +295,7 @@
             <div class="modal-body p-10 bg-white" id="printArea{{ $incident->id }}">
                 
                 <!-- OFFICIAL LETTERHEAD (With Actual Logo) -->
-                <div class="flex justify-between items-end pb-2 border-b-2 border-black mb-4">
+                <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 items-end pb-2  -2 border-black mb-4">
                     <div class="flex items-center">
                         <!-- Official UC Logo (.png) -->
                         <img src="{{ asset('images/UC_Official_Logo.png') }}" alt="University of the Cordilleras" class="h-14 object-contain" style="max-width: 300px;">
@@ -393,7 +393,7 @@
                 </table>
 
                 <!-- Exact Footer text format from your original paper image -->
-                <div class="flex justify-between border-t border-black mt-8 pt-1 text-[10px] text-black font-sans">
+                <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 border-t  lack mt-8 pt-1 text-[10px] text-black font-sans">
                     <div>
                         UC-ADM-SDO-FORM-IR<br>
                         August 17, 2023 Rev. 00

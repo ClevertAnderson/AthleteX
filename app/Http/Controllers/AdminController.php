@@ -14,12 +14,17 @@ use App\Models\Certificate; // Added for certificates
 use App\Models\GradeScale; 
 use App\Models\ScholarshipCriteria;
 use App\Models\Sport;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CoachCredentialsMail;
 
 class AdminController extends Controller
 {
     // --- VIEW LOADERS (Fetch data for the specific tab) ---
+
+    // "General Information" is now the Settings page. Old links/bookmarks to /admin/general
+    // still work because they redirect here.
     public function general() { 
-        return view('admin.general'); 
+        return redirect()->route('admin.settings'); 
     }
     
     public function settings() { 
@@ -27,7 +32,7 @@ class AdminController extends Controller
     }
     
     public function users() { 
-        $users = User::all();
+        $users = User::paginate(10);
         $sports = Sport::orderBy('name')->get(); 
         return view('admin.users', compact('users', 'sports')); 
     }
@@ -61,6 +66,46 @@ class AdminController extends Controller
     // --- ACTIONS (Save Logic) ---
     public function saveSettings(Request $request) 
     {
+        // Validate the known fields (all optional). Any other posted keys are still saved below,
+        // exactly like before, so other forms that post to this route keep working.
+        $request->validate([
+            // School profile
+            'school_name'  => 'nullable|string|max:255',
+            'contact_name' => 'nullable|string|max:255',
+            'email'        => 'nullable|email|max:255',
+            'phone_1'      => 'nullable|string|max:50',
+            'phone_2'      => 'nullable|string|max:50',
+            'address'      => 'nullable|string|max:255',
+            'city'         => 'nullable|string|max:255',
+            'province'     => 'nullable|string|max:255',
+            'zip'          => 'nullable|string|max:20',
+            'logo'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+
+            // Academic year & semester
+            'academic_year'    => ['nullable', 'regex:/^\d{4}-\d{4}$/'],
+            'current_semester' => 'nullable|in:1st Semester,2nd Semester,Summer',
+            'semester_start'   => 'nullable|date',
+            'semester_end'     => 'nullable|date|after_or_equal:semester_start',
+
+            // Email & notifications
+            'notification_email'       => 'nullable|email|max:255',
+            'notify_new_registration'  => 'nullable|in:0,1',
+            'notify_approval_decision' => 'nullable|in:0,1',
+            'send_coach_credentials'   => 'nullable|in:0,1',
+
+            // Security
+            'session_timeout'         => 'nullable|integer|min:0|max:480',
+            'password_min_length'     => 'nullable|integer|min:6|max:32',
+            'password_require_number' => 'nullable|in:0,1',
+            'password_require_symbol' => 'nullable|in:0,1',
+
+            // System preferences
+            'records_per_page' => 'nullable|integer|min:5|max:100',
+        ], [
+            'academic_year.regex'           => 'Use the format 2026-2027.',
+            'semester_end.after_or_equal'   => 'The semester end date must be on or after the start date.',
+        ]);
+
         $data = $request->except(['_token', 'logo']);
         
         if ($request->hasFile('logo')) {
@@ -97,11 +142,31 @@ class AdminController extends Controller
 
     public function createCoachUser(Request $request)
     {
+        // Password rules come from Admin > Settings > Security
+        $minLength = max(6, (int) Setting::get('password_min_length', 8));
+        $passwordRules = ['required', 'string', "min:{$minLength}", 'confirmed'];
+
+        if (Setting::get('password_require_number', '0') === '1') {
+            $passwordRules[] = function ($attribute, $value, $fail) {
+                if (! preg_match('/[0-9]/', (string) $value)) {
+                    $fail('The password must contain at least one number.');
+                }
+            };
+        }
+
+        if (Setting::get('password_require_symbol', '0') === '1') {
+            $passwordRules[] = function ($attribute, $value, $fail) {
+                if (! preg_match('/[^A-Za-z0-9]/', (string) $value)) {
+                    $fail('The password must contain at least one symbol (e.g. ! @ # $).');
+                }
+            };
+        }
+
         // 1. Validate the input
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => $passwordRules,
             'coach_sport' => [
                 'required',
                 'string',
@@ -145,6 +210,18 @@ class AdminController extends Controller
             $user->coach_sport = $validated['coach_sport'];
         }
         $user->save();
+
+        // ✉️ NEW: ACTUALLY SEND THE EMAIL
+        try {
+            $mailData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'] // The password the admin typed
+            ];
+            Mail::to($validated['email'])->send(new CoachCredentialsMail($mailData));
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => "Coach account created, but email failed to send: " . $e->getMessage()]);
+        }
 
         return back()->with('success', "Coach user account '{$user->email}' created and linked to coach profile (ID: {$coach->id}) for {$validated['coach_sport']}.");
     }

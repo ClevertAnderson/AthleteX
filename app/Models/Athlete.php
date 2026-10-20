@@ -13,31 +13,31 @@ class Athlete extends Model
         'student_id',
         'coach_id',
         'first_name',
-        'last_name',     
+        'last_name',
         'middle_initial',
-        'suffix',           // Added
+        'suffix',
         'course',
-        'college',          // ADDED (Was missing)
+        'college',
         'year_level',
         'sport',
         'sport_event',
         'status',
         'classification',
-        
+
         // Personal
-        'gender',           // Matches DB column
+        'gender',
         'birthdate',
         'age',
         'blood_type',
         'email',
         'facebook',
-        'marital_status',   // Matches DB column
-        'nationality',      // ADDED (Was missing)
-        'place_of_birth',   // ADDED (Was missing)
-        
+        'marital_status',
+        'nationality',
+        'place_of_birth',
+
         // Physical
-        'height',           // ADDED (Was missing)
-        'weight',           // ADDED (Was missing)
+        'height',
+        'weight',
 
         // Contact
         'contact_number',
@@ -45,11 +45,11 @@ class Athlete extends Model
         'city_municipality',
         'province_state',
         'zip_code',
-        
+
         // Emergency
         'emergency_person',
         'emergency_contact',
-        'emergency_relationship', // ADDED (Was missing)
+        'emergency_relationship',
 
         // System
         'picture_path',
@@ -57,6 +57,11 @@ class Athlete extends Model
         'approval_notes',
         'approved_at',
         'approved_by',
+
+        // Rejection (why / when / who)
+        'rejection_reason',
+        'rejected_at',
+        'rejected_by',
 
         'coach_name',
         'date_joined',
@@ -72,19 +77,13 @@ class Athlete extends Model
         'balance',
         'current_work',
         'current_company',
-        'picture_path',
         'notes',
         'inactive_date',
-
-        'emergency_relationship', // ADDED (Was missing)
-
-        // System
-        'picture_path',
-
     ];
 
     protected $casts = [
         'birthdate' => 'date',
+        'rejected_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -122,5 +121,10 @@ class Athlete extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejecter()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
     }
 }

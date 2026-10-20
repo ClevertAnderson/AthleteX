@@ -13,20 +13,22 @@
                 <h1 class="text-2xl font-bold text-gray-800">
                     <i class="bi bi-trophy-fill text-yellow-400 mr-2"></i> Master Achievements List
                 </h1>
-                
+                <p class="text-sm text-gray-500">
+                    {{ $achievements->total() }} {{ \Illuminate\Support\Str::plural('record', $achievements->total()) }} · newest first
+                </p>
             </div>
 
             <!-- Filters -->
             <div class="bg-white p-4 rounded-xl shadow mb-6">
                 <form method="GET" action="{{ route('achievements.index') }}" class="flex flex-wrap gap-4 items-end">
-                    
+
                     <!-- Search by Event or Award -->
                     <div class="flex-1 min-w-[200px]">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search event or award..." class="w-full text-gray-900 bg-white border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 focus:outline-none p-2 border" onblur="this.form.submit()">
                     </div>
 
-                    <!-- 🚀 NEW: Filter by Type (All, Athlete, Coach) -->
+                    <!-- Filter by Type (All, Athlete, Coach) -->
                     <div class="w-56">
                         <label class="block text-sm font-medium text-gray-700 mb-1">View Type</label>
                         <select name="type" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 p-2 border font-semibold text-[#2e4e1f]" onchange="this.form.submit()">
@@ -36,9 +38,9 @@
                         </select>
                     </div>
 
-                    <!-- Filter by Month -->
-                    <div class="w-48">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Month Recorded</label>
+                    <!-- Filter by Month (of the date achieved) -->
+                    <div class="w-44">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Month Achieved</label>
                         <select name="month" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 p-2 border" onchange="this.form.submit()">
                             <option value="">All Months</option>
                             @php
@@ -52,9 +54,22 @@
                         </select>
                     </div>
 
+                    <!-- Filter by Year (of the date achieved) -->
+                    <div class="w-36">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Year Achieved</label>
+                        <select name="year" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 p-2 border" onchange="this.form.submit()">
+                            <option value="">All Years</option>
+                            @foreach($years as $y)
+                                <option value="{{ $y }}" {{ (string) request('year') === (string) $y ? 'selected' : '' }}>
+                                    {{ $y }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Clear Button -->
                     <div class="flex gap-2">
-                        @if(request()->has('search') || request()->has('month') || (request()->has('type') && request('type') !== 'all'))
+                        @if(request()->filled('search') || request()->filled('month') || request()->filled('year') || (request()->filled('type') && request('type') !== 'all'))
                         <a href="{{ route('achievements.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-600 transition">
                             Clear Filters
                         </a>
@@ -74,14 +89,14 @@
                                 <th class="p-4 border-b font-semibold text-sm">Sport / Category</th>
                                 <th class="p-4 border-b font-semibold text-sm">Event & Venue</th>
                                 <th class="p-4 border-b font-semibold text-sm">Award / Rank</th>
-                                <th class="p-4 border-b font-semibold text-sm">Date Achieved</th>
+                                <th class="p-4 border-b font-semibold text-sm">Date Achieved <i class="bi bi-arrow-down-short"></i></th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($achievements as $index => $achievement)
                                 <tr class="hover:bg-gray-50 border-b transition">
                                     <td class="p-4 text-sm text-gray-600">{{ $achievements->firstItem() + $index }}</td>
-                                    
+
                                     <!-- Dynamic Name with Role Badge -->
                                     <td class="p-4 text-sm font-bold text-gray-800">
                                         @if($achievement->model_type === 'coach')
@@ -92,7 +107,7 @@
                                             <span class="ml-2 text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-medium">Student</span>
                                         @endif
                                     </td>
-                                    
+
                                     <!-- Dynamic Sport/Category -->
                                     <td class="p-4 text-sm text-gray-600">
                                         <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-gray-300">
@@ -103,17 +118,17 @@
                                             @endif
                                         </span>
                                     </td>
-                                    
+
                                     <!-- Dynamic Event & Venue -->
                                     <td class="p-4 text-sm text-gray-600">
                                         <p class="font-bold text-gray-700">{{ $achievement->model_type === 'coach' ? $achievement->sports_event : $achievement->event }}</p>
                                         <p class="text-xs text-gray-500"><i class="bi bi-geo-alt"></i> {{ $achievement->venue }}</p>
                                     </td>
-                                    
+
                                     <td class="p-4 text-sm text-gray-600">
                                         <span class="text-yellow-600 font-bold"><i class="bi bi-award"></i> {{ $achievement->award }}</span>
                                     </td>
-                                    
+
                                     <td class="p-4 text-sm text-gray-600">
                                         {{ $achievement->month_day }} {{ $achievement->year }}
                                     </td>

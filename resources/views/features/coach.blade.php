@@ -3,11 +3,34 @@
 @section('title', 'Coaches')
 
 @section('content')
-    <div class="space-y-6 w-full">
+
+    <!-- Force clean tab styles & hover effects, overriding any global CSS conflicts -->
+    <style>
+        a.coach-tab-link {
+            color: #4b5563 !important; /* Default gray text */
+            text-decoration: none !important; /* Remove any underline */
+            border-bottom: 2px solid transparent !important; /* Invisible border for spacing */
+            transition: all 0.3s ease !important; /* Smooth effect */
+        }
+        
+        /* The exact hover effect from Student Athlete tabs */
+        a.coach-tab-link:hover {
+            color: #16a34a !important; /* Turn text green */
+            border-bottom: 2px solid #16a34a !important; /* Show green border */
+        }
+
+        /* The style when a tab is currently active */
+        a.coach-tab-link.active-tab {
+            color: #16a34a !important;
+            border-bottom: 2px solid #16a34a !important;
+        }
+    </style>
+
+    <div class="space-y-6 w-full pt-20 md:pt-6 p-4">
 
         <!-- Page Header -->
-        <div class="bg-white p-6 flex items-center justify-between">
-            <div class="flex-1 text-center flex justify-center items-center gap-2">
+        <div class="bg-white p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm rounded-lg">
+            <div class="flex-1 text-center md:text-left flex justify-center md:justify-start items-center gap-2 w-full">
                 <i class="bi bi-person text-3xl text-gray-800"></i>
                 @if(auth()->check() && auth()->user()->role === 'coach')
                     <h1 class="text-3xl font-bold text-gray-800 mb-0">My Profile</h1>
@@ -20,13 +43,13 @@
             @if(!auth()->check() || auth()->user()->role !== 'coach')
                 <div>
                     <a href="{{ route('coaches.index') }}" 
-                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition whitespace-nowrap">
+                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition inline-block text-sm md:text-base font-semibold">
                         List of Coaches
                     </a>
                 </div>
             @else
-                <!-- Invisible spacer so the title stays perfectly centered for coaches -->
-                <div class="w-[140px]"></div>
+                <!-- Invisible spacer so the title stays centered for coaches on desktop -->
+                <div class="hidden md:block w-[140px]"></div>
             @endif
         </div>
 
@@ -35,49 +58,47 @@
             
             <!-- Search Section - Only for admins -->
             @if(!auth()->check() || auth()->user()->role !== 'coach')
-                <div class="flex items-center space-x-2 w-full md:w-auto">
+                <div class="flex items-center space-x-2">
                     <label class="text-gray-700 font-medium whitespace-nowrap" for="coach_search">Search</label>
-                    <div class="relative w-full md:w-auto">
+                    <div class="relative">
                         <input type="text" id="coach_search" name="coach_search" placeholder="Enter full name"
-                            class="w-full md:w-64 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
+                            class="w-64 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"
                             autocomplete="off" value="">
                         <!-- Dropdown -->
                         <div id="coach_searchResults" class="absolute top-full left-0 z-50 w-full mt-1 bg-white border border-gray-200 rounded shadow-xl hidden max-h-60 overflow-y-auto"></div>
                     </div>
                 </div>
-            @else
-                <div></div> <!-- Empty spacer for Coach View -->
             @endif
 
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-2">
+            <!-- Action Buttons (Locked Side-by-Side) -->
+            <div class="inline-flex flex-row items-center gap-2">
                 @if(auth()->check() && auth()->user()->role === 'coach')
                     <!-- COACH USERS -->
                     @if(!isset($coach))
-                        <button id="coach_saveBtn" type="button" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm">
+                        <button id="coach_saveBtn" type="button" class="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm font-semibold whitespace-nowrap">
                             Save My Profile
                         </button>
                     @endif
                 @else
                     <!-- ADMIN USERS -->
-                    <button id="coach_addNewBtn" type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
+                    <button id="coach_addNewBtn" type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm font-semibold whitespace-nowrap">
                         + Add New Coach
                     </button>
-                    <button id="coach_saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm">
+                    <button id="coach_saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm font-semibold whitespace-nowrap">
                         Save Coach
                     </button>
                 @endif
                 
-                <button id="coach_editBtn" type="button" class="{{ (auth()->check() && auth()->user()->role === 'coach' && isset($coach)) ? '' : 'hidden' }} px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer shadow-sm">
+                <button id="coach_editBtn" type="button" class="{{ (auth()->check() && auth()->user()->role === 'coach' && isset($coach)) ? '' : 'hidden' }} px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer shadow-sm font-semibold whitespace-nowrap">
                     Edit Profile
                 </button>
                 
-                <button id="coach_updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
+                <button id="coach_updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm font-semibold whitespace-nowrap">
                     Update Profile
                 </button>
 
                 @if(!auth()->check() || auth()->user()->role !== 'coach')
-                    <button id="coach_cancelBtn" type="button" class="hidden px-5 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition cursor-pointer font-medium shadow-sm border border-gray-300">
+                    <button id="coach_cancelBtn" type="button" class="hidden px-5 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition cursor-pointer font-medium shadow-sm border border-gray-300 whitespace-nowrap">
                         Cancel
                     </button>
                 @endif
@@ -85,53 +106,45 @@
         </div>
 
         <!-- Navigation Tabs -->
-        <nav class="mb-6 w-full overflow-x-auto h-8">
-            <ul class="flex space-x-2 min-w-max">
+        <nav class="mb-6 w-full overflow-x-auto h-12">
+            <ul class="flex space-x-2 min-w-max pb-2">
                 <li id="tab-coach-general-info">
-                    <a href="#coach-general-info" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#coach-general-info" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         General Information
                     </a>
                 </li>
                 <li id="tab-coach-achievements">
-                    <a href="#coach-achievements" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#coach-achievements" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Achievements
                     </a>
                 </li>
                 <li id="tab-assigned-schedule-athletes">
-                    <a href="#assigned-schedule-athletes" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#assigned-schedule-athletes" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Assigned Schedule / Athletes
                     </a>
                 </li>
                 <li id="tab-expenses-payments">
-                    <a href="#expenses-payments" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#expenses-payments" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Expenses and Payments
                     </a>
                 </li>
                 <li id="tab-membership">
-                    <a href="#membership" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#membership" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Membership
                     </a>
                 </li>
                 <li id="tab-seminars">
-                    <a href="#seminars" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#seminars" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Seminars
                     </a>
                 </li>
                 <li id="tab-coach-work-history">
-                    <a href="#coach-work-history" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#coach-work-history" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Work History
                     </a>
                 </li>
                 <li id="tab-coach-attachments">
-                    <a href="#coach-attachments" 
-                    class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
+                    <a href="#coach-attachments" class="coach-tab-link whitespace-nowrap px-4 py-2 font-medium cursor-pointer block">
                         Attachments
                     </a>
                 </li>
@@ -141,932 +154,892 @@
         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
         <!-- Tab Content -->
-    <div id="tab-content" class="bg-white p-6 rounded shadow w-full relative">
+        <div id="tab-content" class="bg-white p-4 md:p-6 rounded shadow w-full relative">
 
-        <!-- Coach General Info Content -->
-        <div id="coach-general-info" class="tab-content hidden">
-            <div class="flex items-stretch gap-6">
-                <form id="coachForm" method="POST" action="
-                    @if(auth()->check() && auth()->user()->role === 'coach' && isset($coach))
-                        {{ route('coaches.update', $coach->id) }}
-                    @else
-                        {{ route('coaches.store') }}
-                    @endif
-                " class="coach-form flex items-stretch gap-6 w-full" autocomplete="off" enctype="multipart/form-data">
-                    @csrf
-
-                    @if(auth()->check() && auth()->user()->role === 'coach' && isset($coach))
-                        @method('PUT')
-                    @endif
-
-                    <input type="hidden" name="_method" id="coach_method" value="POST">
-                    <input type="hidden" name="selected_coach_id" id="selected_coach_id" value="{{ isset($coach) ? $coach->id : '' }}">
-
-                    <!-- LEFT SIDE: Main Form -->
-                    <div class="flex-1 gap-4 mb-6">
-
-                        <!-- 1st Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="coach_last_name" class="w-1/3 text-gray-700 font-medium">Last Name</label>
-                                <input type="text" id="coach_last_name" name="coach_last_name" placeholder="Enter last name"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_first_name" class="w-1/3 text-gray-700 font-medium">First Name</label>
-                                <input type="text" id="coach_first_name" name="coach_first_name" placeholder="Enter first name"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_middle_initial" class="w-1/3 text-gray-700 font-medium">Middle Initial</label>
-                                <input type="text" id="coach_middle_initial" name="coach_middle_initial" placeholder="Enter middle initial"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 2nd Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Gender</label>
-                                <select id="coach_gender" name="coach_gender"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                </select>
-                            </div>
-
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Birthdate</label>
-                                <input type="date" id="coach_birthdate" name="coach_birthdate"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Age</label>
-                                <input type="number" id="coach_age" name="coach_age" placeholder="Enter Age"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 3rd Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Blood Type</label>
-                                <input type="text" id="coach_blood_type" name="coach_blood_type" placeholder="Enter Blood Type"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Place of Birth</label>
-                                <input type="text" id="coach_place_of_birth" name="coach_place_of_birth" placeholder="Enter Place of Birth"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_marital_status" class="w-1/3 text-gray-700 font-medium">Marital Status</label>
-                                <select id="coach_marital_status" name="coach_marital_status"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
-                                    <option value="">Select Marital Status</option>
-                                    <option value="Single">Single</option>
-                                    <option value="Married">Married</option>
-                                    <option value="Widowed">Widowed</option>
-                                    <option value="Divorced">Divorced</option>
-                                    <option value="Separated">Separated</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- 4th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="coach_email" class="w-1/3 text-gray-700 font-medium">Email Address</label>
-                                <input type="text" id="coach_email" name="coach_email" placeholder="Enter Email Address"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_facebook" class="w-1/3 text-gray-700 font-medium">Facebook Link</label>
-                                <input type="text" id="coach_facebook" name="coach_facebook" placeholder="Enter Facebook Account Link"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_tba" class="w-1/3 text-gray-700 font-medium">TBA</label>
-                                <input type="text" id="coach_tba" name="coach_tba" placeholder="TO BE ANNOUNCE" 
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 5th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="coach_contact_number" class="w-1/3 text-gray-700 font-medium">Contact No.</label>
-                                <input type="text" id="coach_contact_number" name="coach_contact_number" placeholder="Enter Contact Number"
-                                    class="contact-number w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="col-span-2 flex items-center">
-                                <label for="coach_address" class="w-1/6 text-gray-700 font-medium">Address</label>
-                                <input type="text" id="coach_address" name="coach_address" placeholder="Enter Address"
-                                    class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 6th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="coach_city_municipality" class="w-1/3 text-gray-700 font-medium">City / Municipality</label>
-                                <input type="text" id="coach_city_municipality" name="coach_city_municipality" placeholder="Enter City/Municipality"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_province_state" class="w-1/3 text-gray-700 font-medium">Province / State</label>
-                                <input type="text" id="coach_province_state" name="coach_province_state" placeholder="Enter Province/State"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_zip_code" class="w-1/3 text-gray-700 font-medium">Zip Code</label>
-                                <input type="text" id="coach_zip_code" name="coach_zip_code" placeholder="Enter Zip Code"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
-
-                        <!-- 7th Row -->
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-
-                            <div class="flex items-center gap-2">
-                                <label for="coach_emergency_person" class="w-24 text-gray-700 font-medium">
-                                    Emergency Contact Person
-                                </label>
-                                <input type="text" id="coach_emergency_person" name="coach_emergency_person"
-                                    placeholder="Enter Contact Person"
-                                    class="flex-1 border border-gray-300 rounded px-3 py-2 
-                                        focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <label for="coach_emergency_contact" class="w-24 text-gray-700 font-medium">
-                                    Contact No.
-                                </label>
-                                <input type="text" id="coach_emergency_contact" name="coach_emergency_contact"
-                                    placeholder="Enter Contact Number"
-                                    class="contact-number flex-1 border border-gray-300 rounded px-3 py-2 
-                                        focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                        </div>
-
-
-                        <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
-
-                        <!-- 8th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="post_graduate" class="w-1/3 text-gray-700 font-medium">Name of Post Graduate School</label>
-                                <input type="text" id="post_graduate" name="post_graduate" placeholder="Enter Name of Post Graduate School"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="course_graduated" class="w-1/3 text-gray-700 font-medium">Course Graduated</label>
-                                <input type="text" id="course_graduated" name="course_graduated" placeholder="Enter Course Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_year_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
-                                <input type="date" id="coach_year_graduated" name="coach_year_graduated" placeholder="Enter Year Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 9th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="name_collage" class="w-1/3 text-gray-700 font-medium">Name of Collage School</label>
-                                <input type="text" id="name_collage" name="name_collage" placeholder="Enter Name of Collage School"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_course_graduated" class="w-1/3 text-gray-700 font-medium">Course Graduated</label>
-                                <input type="text" id="coach_course_graduated" name="coach_course_graduated" placeholder="Enter Course Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
-                                <input type="date" id="coach_graduated" name="coach_graduated" placeholder="Enter Year Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
-
-                        <!-- 10th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="coach_highschool" class="w-1/3 text-gray-700 font-medium">Name of Highschool</label>
-                                <input type="text" id="coach_highschool" name="coach_highschool" placeholder="Enter Name of Highschool"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="strand_graduated" class="w-1/3 text-gray-700 font-medium">Strand Graduated</label>
-                                <input type="text" id="strand_graduated" name="strand_graduated" placeholder="Enter Strand Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="highschool_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
-                                <input type="date" id="highschool_graduated" name="highschool_graduated" placeholder="Enter Year Graduated"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <!-- 11th Row -->
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="date_hired" class="w-1/3 text-gray-700 font-medium">Date Hired</label>
-                                <input type="date" id="date_hired" name="date_hired" placeholder="Enter Date Hired"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="honorarium_payment" class="w-1/3 text-gray-700 font-medium">Honorarium Payment</label>
-                                <input type="text" id="honorarium_payment" name="honorarium_payment" placeholder="Enter Honorarium Payment"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="date_resigned" class="w-1/3 text-gray-700 font-medium">Date Resigned</label>
-                                <input type="date" id="date_resigned" name="date_resigned" 
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
-
-                        <!-- 12th Row -->
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="occupation" class="w-1/3 text-gray-700 font-medium">Occupation</label>
-                                <input type="text" id="occupation" name="occupation" placeholder="Enter Occupation"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label for="coach_current_company" class="w-1/3 text-gray-700 font-medium">Current Company</label>
-                                <input type="text" id="coach_current_company" name="coach_current_company" placeholder="Enter Current Company"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-                        </div>
-
-                        <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
-                    </div>
-
-                    <!-- RIGHT SIDE WRAPPER -->
-                    <div class="w-[350px] flex-shrink-0 flex flex-col">
-
-                        <div class="bg-gray-100 rounded-lg p-4 shadow-inner flex flex-col h-full">
-
-                            <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">  
-                                <span id="coach_selected_name" class="mt-2 text-gray-800 font-semibold text-center">
-                                    No Coach Selected
-                                </span>
-                            </div>
-                            
-                            <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">
-                                <div class="w-80 h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm relative overflow-hidden">
-                                    <img id="coach_picturePreview" class="absolute inset-0 w-full h-full object-cover hidden" />
-                                    <span id="coach_noPictureText" class="text-gray-500 text-sm">No Picture</span>
-                                </div>
-                            </div>
-
-                            <div class="space-y-3 flex-1 w-full">
-                                <div class="flex items-center">
-                                    <label class="w-1/3 text-sm font-medium text-gray-700">Sports Event</label>
-                                    @if(auth()->check() && auth()->user()->role === 'coach' && auth()->user()->coach_sport)
-                                        <input type="text" class="w-2/3 bg-gray-100 border border-gray-300 rounded px-2 py-1 text-gray-600 focus:outline-none" 
-                                            value="{{ auth()->user()->coach_sport }}" disabled>
-                                        <input type="hidden" name="coach_sport_event" value="{{ auth()->user()->coach_sport }}">
-                                    @else
-                                        <select id="coach_sport_event" name="coach_sport_event" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
-                                            <option value="">Select Sport...</option>
-                                            @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
-                                                <option value="{{ str_replace(' ', '_', $sport->name) }}">
-                                                    {{ $sport->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    @endif
-                                </div>
-
-                                <div class="flex items-center mt-2">
-                                    <label class="w-1/3 text-sm font-medium text-gray-700">Position</label>
-                                    <select name="position" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
-                                        <option value="">-- Select Position --</option>
-                                        <option value="Head Coach">Head Coach</option>
-                                        <option value="Assistant Coach">Assistant Coach</option>
-                                        <option value="Trainer">Trainer</option>
-                                        <option value="Physiotherapist">Physiotherapist</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Scout">Scout</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-
-                                <div class="flex items-center mt-2">
-                                    <label class="w-1/3 text-sm font-medium text-gray-700">Status</label>
-                                    <select name="coach_status" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
-                                        <option value="">-- Select Status --</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                        <option value="Transfered">Transfered</option>
-                                        <option value="Graduated">Graduated</option>
-                                    </select>
-                                </div>
-
-                                <div class="flex justify-between mt-6">
-                                    <input type="file" id="coach_pictureInput" name="coach_picture" accept="image/*" class="hidden">
-
-                                    <button type="button" id="coach_addPictureBtn"
-                                        class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
-                                        <i class="bi bi-person-plus"></i> Add Picture
-                                    </button>
-
-                                    <button type="button" id="coach_clearPictureBtn"
-                                        class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
-                                        <i class="bi bi-person-x"></i> Clear Picture
-                                    </button>
-                                </div>
-
-                                <div class="flex items-center mt-4">
-                                    <label class="w-1/3 text-sm font-medium text-gray-700">Date Inactive</label>
-                                    <input type="date" name="coach_inactive_date" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" autocomplete="off">
-                                </div>
-
-                                <!-- PRINT BUTTON -->
-                                <button type="button" id="coach_printBtn" onclick="printCoach()" 
-                                    class="hidden w-full mt-6 bg-green-700 text-white font-bold rounded px-3 py-2 shadow hover:bg-green-800 transition flex justify-center items-center gap-2">
-                                    🖨️ Print Coach Record
-                                </button>
-                            </div>
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-            <!-- Note Section -->
-            <div id="coach_tab-content" >
-                <div class="bg-white p-6 flex items-center justify-between">
-                    <div class="flex-1">
-                        <p class="text-3xl font-bold text-gray-800 mb-0">Notes</p>
-                        <hr class="border-t-2 border-gray-400 my-2  w-[100%]">
-                        <textarea type="text" name="coach_notes" class="w-2/3 border border-gray-300 rounded px-2 py-1 h-52 w-full" autocomplete="off">{{ isset($coach) ? $coach->coach_notes : '' }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ========================================================================================= -->
-        <!-- Coach Achievements Content -->
-        <div id="coach-achievements" class="tab-content hidden">
-            <div class="space-y-6">
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Achievements</h1>
-                    <button onclick="toggleCoachAchievementModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Achievement
-                    </button>
-                </div>
-
-                <!-- Achievements Table -->
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="min-w-full text-sm text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="px-6 py-3 font-medium">Year</th>
-                                <th class="px-6 py-3 font-medium">Month-Day</th>
-                                <th class="px-6 py-3 font-medium">Sports Event</th>
-                                <th class="px-6 py-3 font-medium">Venue</th>
-                                <th class="px-6 py-3 font-medium">Award</th>
-                                <th class="px-6 py-3 font-medium">Category</th>
-                                <th class="px-6 py-3 font-medium">Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody id="coach-achievements-tbody">
-                            <!-- Data will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Modal -->
-            <div id="coach-AchievementModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleCoachAchievementModal(false)" 
-                            class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">
-                        ✕
-                    </button>
-                    <h2 class="text-2xl font-semibold text-white text-center mb-6 border-b border-green-700 pb-2">Add Achievement</h2>
-                    
-                    <form id="coach-achievementForm" onsubmit="return false;">
+            <!-- Coach General Info Content -->
+            <div id="coach-general-info" class="coach-tab-pane hidden">
+                <div class="flex items-stretch gap-6 w-full">
+                    <form id="coachForm" method="POST" action="
+                        @if(auth()->check() && auth()->user()->role === 'coach' && isset($coach))
+                            {{ route('coaches.update', $coach->id) }}
+                        @else
+                            {{ route('coaches.store') }}
+                        @endif
+                    " class="coach-form flex flex-col lg:flex-row items-stretch gap-6 w-full" autocomplete="off" enctype="multipart/form-data">
                         @csrf
-                        <input type="hidden" name="coach_id" id="coach_id" value="">
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Year</label>
-                                <input type="text" name="year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="2024">
+
+                        @if(auth()->check() && auth()->user()->role === 'coach' && isset($coach))
+                            @method('PUT')
+                        @endif
+
+                        <input type="hidden" name="_method" id="coach_method" value="POST">
+                        <input type="hidden" name="selected_coach_id" id="selected_coach_id" value="{{ isset($coach) ? $coach->id : '' }}">
+
+                        <!-- LEFT SIDE: Main Form -->
+                        <div class="flex-1 gap-4 mb-6">
+
+                            <!-- 1st Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="coach_last_name" class="w-1/3 text-gray-700 font-medium">Last Name</label>
+                                    <input type="text" id="coach_last_name" name="coach_last_name" placeholder="Enter last name" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_first_name" class="w-1/3 text-gray-700 font-medium">First Name</label>
+                                    <input type="text" id="coach_first_name" name="coach_first_name" placeholder="Enter first name" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_middle_initial" class="w-1/3 text-gray-700 font-medium">Middle Initial</label>
+                                    <input type="text" id="coach_middle_initial" name="coach_middle_initial" placeholder="Enter middle initial" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Month-Day</label>
-                                <input type="text" name="month_day" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Mar-15">
+
+                            <!-- 2nd Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label class="w-1/3 text-gray-700 font-medium">Gender</label>
+                                    <select id="coach_gender" name="coach_gender" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label class="w-1/3 text-gray-700 font-medium">Birthdate</label>
+                                    <input type="date" id="coach_birthdate" name="coach_birthdate" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label class="w-1/3 text-gray-700 font-medium">Age</label>
+                                    <input type="number" id="coach_age" name="coach_age" placeholder="Enter Age" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Sports Event</label>
-                                <input type="text" name="sports_event" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Basketball Tournament">
+
+                            <!-- 3rd Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label class="w-1/3 text-gray-700 font-medium">Blood Type</label>
+                                    <input type="text" id="coach_blood_type" name="coach_blood_type" placeholder="Enter Blood Type" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label class="w-1/3 text-gray-700 font-medium">Place of Birth</label>
+                                    <input type="text" id="coach_place_of_birth" name="coach_place_of_birth" placeholder="Enter Place of Birth" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_marital_status" class="w-1/3 text-gray-700 font-medium">Marital Status</label>
+                                    <select id="coach_marital_status" name="coach_marital_status" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
+                                        <option value="">Select Marital Status</option>
+                                        <option value="Single">Single</option>
+                                        <option value="Married">Married</option>
+                                        <option value="Widowed">Widowed</option>
+                                        <option value="Divorced">Divorced</option>
+                                        <option value="Separated">Separated</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Venue</label>
-                                <input type="text" name="venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="City Gym">
+
+                            <!-- 4th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="coach_email" class="w-1/3 text-gray-700 font-medium">Email Address</label>
+                                    <input type="text" id="coach_email" name="coach_email" placeholder="Enter Email Address" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_facebook" class="w-1/3 text-gray-700 font-medium">Facebook Link</label>
+                                    <input type="text" id="coach_facebook" name="coach_facebook" placeholder="Enter Facebook Account Link"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_tba" class="w-1/3 text-gray-700 font-medium">TBA</label>
+                                    <input type="text" id="coach_tba" name="coach_tba" placeholder="TO BE ANNOUNCE" 
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Award</label>
-                                <select name="award" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                                    <option value="">Select Award</option>
-                                    <option value="Coach of the Year">Coach of the Year</option>
-                                    <option value="Best Performance">Best Performance</option>
-                                    <option value="Team Excellence">Team Excellence</option>
-                                    <option value="Achievement in Sports">Achievement in Sports</option>
-                                    <option value="Lifetime Achievement">Lifetime Achievement</option>
-                                </select>
+
+                            <!-- 5th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="coach_contact_number" class="w-1/3 text-gray-700 font-medium">Contact No.</label>
+                                    <input type="text" id="coach_contact_number" name="coach_contact_number" placeholder="Enter Contact Number" required
+                                        class="contact-number w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="col-span-1 md:col-span-2 flex items-center">
+                                    <label for="coach_address" class="w-1/6 text-gray-700 font-medium">Address</label>
+                                    <input type="text" id="coach_address" name="coach_address" placeholder="Enter Address" required
+                                        class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-1">Category</label>
-                                <input type="text" name="category" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Regional">
+
+                            <!-- 6th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="coach_city_municipality" class="w-1/3 text-gray-700 font-medium">City / Municipality</label>
+                                    <input type="text" id="coach_city_municipality" name="coach_city_municipality" placeholder="Enter City/Municipality" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_province_state" class="w-1/3 text-gray-700 font-medium">Province / State</label>
+                                    <input type="text" id="coach_province_state" name="coach_province_state" placeholder="Enter Province/State" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_zip_code" class="w-1/3 text-gray-700 font-medium">Zip Code</label>
+                                    <input type="text" id="coach_zip_code" name="coach_zip_code" placeholder="Enter Zip Code" required
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
                             </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-white mb-1">Remarks</label>
-                                <textarea name="remarks" rows="2" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Additional notes..."></textarea>
+
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+
+                            <!-- 7th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <label for="coach_emergency_person" class="w-24 text-gray-700 font-medium">
+                                        Emergency Contact Person
+                                    </label>
+                                    <input type="text" id="coach_emergency_person" name="coach_emergency_person" required
+                                        placeholder="Enter Contact Person"
+                                        class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <label for="coach_emergency_contact" class="w-24 text-gray-700 font-medium">
+                                        Contact No.
+                                    </label>
+                                    <input type="text" id="coach_emergency_contact" name="coach_emergency_contact" required
+                                        placeholder="Enter Contact Number"
+                                        class="contact-number flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+
+                            <!-- 8th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="post_graduate" class="w-1/3 text-gray-700 font-medium">Name of Post Graduate School</label>
+                                    <input type="text" id="post_graduate" name="post_graduate" placeholder="Enter Name of Post Graduate School"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="course_graduated" class="w-1/3 text-gray-700 font-medium">Course Graduated</label>
+                                    <input type="text" id="course_graduated" name="course_graduated" placeholder="Enter Course Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_year_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
+                                    <input type="date" id="coach_year_graduated" name="coach_year_graduated" placeholder="Enter Year Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <!-- 9th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="name_collage" class="w-1/3 text-gray-700 font-medium">Name of Collage School</label>
+                                    <input type="text" id="name_collage" name="name_collage" placeholder="Enter Name of Collage School"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_course_graduated" class="w-1/3 text-gray-700 font-medium">Course Graduated</label>
+                                    <input type="text" id="coach_course_graduated" name="coach_course_graduated" placeholder="Enter Course Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
+                                    <input type="date" id="coach_graduated" name="coach_graduated" placeholder="Enter Year Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+
+                            <!-- 10th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="coach_highschool" class="w-1/3 text-gray-700 font-medium">Name of Highschool</label>
+                                    <input type="text" id="coach_highschool" name="coach_highschool" placeholder="Enter Name of Highschool"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="strand_graduated" class="w-1/3 text-gray-700 font-medium">Strand Graduated</label>
+                                    <input type="text" id="strand_graduated" name="strand_graduated" placeholder="Enter Strand Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="highschool_graduated" class="w-1/3 text-gray-700 font-medium">Year Graduated</label>
+                                    <input type="date" id="highschool_graduated" name="highschool_graduated" placeholder="Enter Year Graduated"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <!-- 11th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="date_hired" class="w-1/3 text-gray-700 font-medium">Date Hired</label>
+                                    <input type="date" id="date_hired" name="date_hired" placeholder="Enter Date Hired"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="honorarium_payment" class="w-1/3 text-gray-700 font-medium">Honorarium Payment</label>
+                                    <input type="text" id="honorarium_payment" name="honorarium_payment" placeholder="Enter Honorarium Payment"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="date_resigned" class="w-1/3 text-gray-700 font-medium">Date Resigned</label>
+                                    <input type="date" id="date_resigned" name="date_resigned" 
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+
+                            <!-- 12th Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="flex items-center">
+                                    <label for="occupation" class="w-1/3 text-gray-700 font-medium">Occupation</label>
+                                    <input type="text" id="occupation" name="occupation" placeholder="Enter Occupation"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+
+                                <div class="flex items-center">
+                                    <label for="coach_current_company" class="w-1/3 text-gray-700 font-medium">Current Company</label>
+                                    <input type="text" id="coach_current_company" name="coach_current_company" placeholder="Enter Current Company"
+                                        class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                </div>
+                            </div>
+
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+                        </div>
+
+                        <!-- RIGHT SIDE WRAPPER -->
+                        <div class="w-full lg:w-[350px] flex-shrink-0 flex flex-col">
+                            <div class="bg-gray-100 rounded-lg p-4 shadow-inner flex flex-col h-full">
+
+                                <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">  
+                                    <span id="coach_selected_name" class="mt-2 text-gray-800 font-semibold text-center">
+                                        No Coach Selected
+                                    </span>
+                                </div>
+                                
+                                <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">
+                                    <div class="w-full h-80 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm relative overflow-hidden">
+                                        <img id="coach_picturePreview" class="absolute inset-0 w-full h-full object-cover hidden" />
+                                        <span id="coach_noPictureText" class="text-gray-500 text-sm">No Picture</span>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3 flex-1 w-full">
+                                    <div class="flex items-center">
+                                        <label class="w-1/3 text-sm font-medium text-gray-700">Sports Event</label>
+                                        @if(auth()->check() && auth()->user()->role === 'coach' && auth()->user()->coach_sport)
+                                            <input type="text" class="w-2/3 bg-gray-100 border border-gray-300 rounded px-2 py-1 text-gray-600 focus:outline-none" 
+                                                value="{{ auth()->user()->coach_sport }}" disabled>
+                                            <input type="hidden" name="coach_sport_event" value="{{ auth()->user()->coach_sport }}">
+                                        @else
+                                            <select id="coach_sport_event" name="coach_sport_event" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
+                                                <option value="">Select Sport...</option>
+                                                @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
+                                                    <option value="{{ $sport->name }}">
+                                                        {{ $sport->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex items-center mt-2">
+                                        <label class="w-1/3 text-sm font-medium text-gray-700">Position</label>
+                                        <select name="position" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
+                                            <option value="">-- Select Position --</option>
+                                            <option value="Head Coach">Head Coach</option>
+                                            <option value="Assistant Coach">Assistant Coach</option>
+                                            <option value="Trainer">Trainer</option>
+                                            <option value="Physiotherapist">Physiotherapist</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Scout">Scout</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex items-center mt-2">
+                                        <label class="w-1/3 text-sm font-medium text-gray-700">Status</label>
+                                        <select name="coach_status" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
+                                            <option value="">-- Select Status --</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Transfered">Transfered</option>
+                                            <option value="Graduated">Graduated</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row justify-between gap-4 mt-6">
+                                        <input type="file" id="coach_pictureInput" name="coach_picture" accept="image/*" class="hidden">
+
+                                        <button type="button" id="coach_addPictureBtn"
+                                            class="w-full bg-green-700 text-white font-semibold rounded px-3 py-2 flex items-center justify-center gap-1 hover:bg-green-800 transition">
+                                            <i class="bi bi-person-plus"></i> Add Picture
+                                        </button>
+
+                                        <button type="button" id="coach_clearPictureBtn"
+                                            class="w-full bg-red-600 text-white font-semibold rounded px-3 py-2 flex items-center justify-center gap-1 hover:bg-red-700 transition">
+                                            <i class="bi bi-person-x"></i> Clear Picture
+                                        </button>
+                                    </div>
+
+                                    <div class="flex items-center mt-4">
+                                        <label class="w-1/3 text-sm font-medium text-gray-700">Date Inactive</label>
+                                        <input type="date" name="coach_inactive_date" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" autocomplete="off">
+                                    </div>
+
+                                    <!-- PRINT BUTTON -->
+                                    <button type="button" id="coach_printBtn" onclick="printCoach()" 
+                                        class="hidden w-full mt-6 bg-blue-600 text-white font-bold rounded px-3 py-2 shadow hover:bg-blue-700 transition flex justify-center items-center gap-2">
+                                        🖨️ Print Coach Record
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Achievement
-                        </button>
                     </form>
                 </div>
-            </div>
-        </div>
 
-
-        <!-- ========================================================================================= -->
-        <!-- Coach Assigned Schedule / Atheletes Content -->
-        <div id="assigned-schedule-athletes" class="tab-content hidden">
-            <div class="space-y-6">
-
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Assigned Schedule / Athletes</h1>
-
-                    <button onclick="toggleScheduleModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Record
-                    </button>
+                <!-- Note Section -->
+                <div id="coach_tab-content" class="mt-6">
+                    <div class="bg-white p-6 shadow-sm rounded border">
+                        <div class="flex-1">
+                            <p class="text-xl md:text-2xl font-bold text-gray-800 mb-0">Notes</p>
+                            <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
+                            <textarea type="text" name="coach_notes" class="w-full border border-gray-300 rounded px-3 py-2 h-52 focus:outline-none focus:ring-2 focus:ring-green-600" autocomplete="off">{{ isset($coach) ? $coach->coach_notes : '' }}</textarea>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- SUBJECT TABLE -->
-                <div>
-                    <table class="w-full text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="py-3 border border-gray-300" rowspan="2">Term</th>
-                                <th class="py-3 border border-gray-300" rowspan="2">Academic Year</th>
-                                <th class="py-3 border border-gray-300" colspan="3">Total Number of Athletes</th>
-                                <th class="py-3 border border-gray-300" rowspan="2">Remarks</th>
-                            </tr>
-                            <tr>
-                                <th class="py-2 border border-gray-300">A</th>
-                                <th class="py-2 border border-gray-300">B</th>
-                                <th class="py-2 border border-gray-300">C</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="scheduleTable" class="text-gray-700">
-                            
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
-            <!-- ADD SUBJECT MODAL -->
-            <div id="scheduleModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleScheduleModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
-                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Schedule / Athlete</h2>
-
-                    <form id="ScheduleForm" class="space-y-4" onsubmit="return false;">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Term</label>
-                                <input type="text" name="term" placeholder="e.g., 1st Term" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Academic Year</label>
-                                <input type="text" name="academic_year" placeholder="e.g., 2024 - 2025" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                        </div>
-
-                        <label class="block text-white font-medium mt-4 mb-2 text-sm text-center">Total Number of Athletes</label>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-white text-xs mb-1 text-center">Class A</label>
-                                <input type="number" name="count_a" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white text-xs mb-1 text-center">Class B</label>
-                                <input type="number" name="count_b" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white text-xs mb-1 text-center">Class C</label>
-                                <input type="number" name="count_c" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
-                            <input type="text" name="remarks" placeholder="Any notes or remark" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                        </div>
-
-                        <button type="submit" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Record
+            <!-- ========================================================================================= -->
+            <!-- Coach Achievements Content -->
+            <div id="coach-achievements" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">🏅 Achievements</h1>
+                        <button onclick="toggleCoachAchievementModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Achievement
                         </button>
-                    </form> 
-                </div> 
-            </div> 
-        </div>
+                    </div>
 
-        <!-- ========================================================================================= -->
-        <!-- Coach Expenses and Payments Content -->
-        <div id="expenses-payments" class="tab-content hidden">
-            <div class="space-y-6">
-
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Assigned Schedule / Athletes</h1>
-
-                    <button onclick="toggleExpensesModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Record
-                    </button>
+                    <!-- Achievements Table -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full text-sm text-left whitespace-nowrap">
+                            <thead class="bg-green-600 text-white text-center">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">Year</th>
+                                    <th class="px-6 py-3 font-medium">Month-Day</th>
+                                    <th class="px-6 py-3 font-medium">Sports Event</th>
+                                    <th class="px-6 py-3 font-medium">Venue</th>
+                                    <th class="px-6 py-3 font-medium">Award</th>
+                                    <th class="px-6 py-3 font-medium">Category</th>
+                                    <th class="px-6 py-3 font-medium">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coach-achievements-tbody" class="bg-white text-gray-700">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <!-- SUBJECT TABLE -->
-                <div>
-                    <table class="w-full text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="py-3">Year</th>
-                                <th class="py-3">Date</th>
-                                <th class="py-3">Title of Activity</th>
-                                <th class="py-3">Estimate Budget</th>
-                                <th class="py-3">Actual Budget</th>
-                                <th class="py-3">Variance</th>
-                                <th class="py-3">Remarks</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="expensesTable" class="text-gray-700">
+                <!-- Modal -->
+                <div id="coach-AchievementModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleCoachAchievementModal(false)" 
+                                class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">
+                            ✕
+                        </button>
+                        <h2 class="text-2xl font-semibold text-white text-center mb-6 border-b border-green-700 pb-2">Add Achievement</h2>
+                        
+                        <form id="coach-achievementForm" onsubmit="return false;">
+                            @csrf
+                            <input type="hidden" name="coach_id" id="coach_id" value="">
                             
-                        </tbody>
-                    </table>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Year</label>
+                                    <input type="text" name="year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="2024">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Month-Day</label>
+                                    <input type="text" name="month_day" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Mar-15">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Sports Event</label>
+                                    <input type="text" name="sports_event" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Basketball Tournament">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Venue</label>
+                                    <input type="text" name="venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="City Gym">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Award</label>
+                                    <select name="award" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                        <option value="">Select Award</option>
+                                        <option value="Coach of the Year">Coach of the Year</option>
+                                        <option value="Best Performance">Best Performance</option>
+                                        <option value="Team Excellence">Team Excellence</option>
+                                        <option value="Achievement in Sports">Achievement in Sports</option>
+                                        <option value="Lifetime Achievement">Lifetime Achievement</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-white mb-1">Category</label>
+                                    <input type="text" name="category" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Regional">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm font-medium text-white mb-1">Remarks</label>
+                                    <textarea name="remarks" rows="2" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Additional notes..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Achievement
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
             </div>
 
-            <!-- ADD EXPENSES MODAL -->
-            <div id="expensesModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleExpensesModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
-                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Expenses</h2>
+            <!-- ========================================================================================= -->
+            <!-- Coach Assigned Schedule / Athletes Content -->
+            <div id="assigned-schedule-athletes" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Assigned Schedule / Athletes</h1>
+                        <button onclick="toggleScheduleModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Record
+                        </button>
+                    </div>
 
-                    <form id="ExpensesForm" class="space-y-4" onsubmit="return false;">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Year</label>
-                                <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                    <!-- SUBJECT TABLE -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full text-left whitespace-nowrap">
+                            <thead class="bg-green-600 text-white text-center">
+                                <tr>
+                                    <th class="py-3 px-4 border border-gray-300" rowspan="2">Term</th>
+                                    <th class="py-3 px-4 border border-gray-300" rowspan="2">Academic Year</th>
+                                    <th class="py-3 px-4 border border-gray-300" colspan="3">Total Number of Athletes</th>
+                                    <th class="py-3 px-4 border border-gray-300" rowspan="2">Remarks</th>
+                                </tr>
+                                <tr>
+                                    <th class="py-2 px-4 border border-gray-300">A</th>
+                                    <th class="py-2 px-4 border border-gray-300">B</th>
+                                    <th class="py-2 px-4 border border-gray-300">C</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTable" class="text-gray-700 bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD SUBJECT MODAL -->
+                <div id="scheduleModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleScheduleModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                        <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Schedule / Athlete</h2>
+
+                        <form id="ScheduleForm" class="space-y-4" onsubmit="return false;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Term</label>
+                                    <input type="text" name="term" placeholder="e.g., 1st Term" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Academic Year</label>
+                                    <input type="text" name="academic_year" placeholder="e.g., 2024 - 2025" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Date</label>
-                                <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+
+                            <label class="block text-white font-medium mt-4 mb-2 text-sm text-center">Total Number of Athletes</label>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-white text-xs mb-1 text-center">Class A</label>
+                                    <input type="number" name="count_a" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white text-xs mb-1 text-center">Class B</label>
+                                    <input type="number" name="count_b" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white text-xs mb-1 text-center">Class C</label>
+                                    <input type="number" name="count_c" placeholder="0" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
                             </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Title of Activity</label>
-                                <input type="text" name="title" placeholder="Title of Activity" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Estimate Budget</label>
-                                <input type="number" name="estimate" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Actual Budget</label>
-                                <input type="text" name="actual" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Variance</label>
-                                <input type="text" name="variance" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
+
+                            <div class="mt-4">
                                 <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
-                                <input type="text" name="remark" placeholder="Input Remark" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                <input type="text" name="remarks" placeholder="Any notes or remark" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
                             </div>
-                        </div>
-                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Record
-                        </button>
-                    </form> 
+
+                            <button type="submit" class="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Record
+                            </button>
+                        </form> 
+                    </div> 
                 </div> 
-            </div> 
-        </div>
-
-        <!-- ========================================================================================= -->
-        <!-- Coach Membership Content -->
-        <div id="membership" class="tab-content hidden">
-            <div class="space-y-6">
-
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Membership</h1>
-
-                    <button onclick="toggleMembershipModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Record
-                    </button>
-                </div>
-
-                <!-- SUBJECT TABLE -->
-                <div>
-                    <table class="w-full text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="py-3">Year</th>
-                                <th class="py-3">Date</th>
-                                <th class="py-3">Venue</th>
-                                <th class="py-3">Name of organization</th>
-                                <th class="py-3">Level</th>
-                                <th class="py-3">Position</th>
-                                <th class="py-3">Remarks</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="membershipTable" class="text-gray-700">
-                            
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
-            <!-- ADD Membership MODAL -->
-            <div id="membershipModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleMembershipModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
-                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Membership</h2>
-
-                    <form id="MembershipForm" class="space-y-4" onsubmit="return false;">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Year</label>
-                                <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Date</label>
-                                <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Venue</label>
-                                <input type="text" name="venue" placeholder="Venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Name of Organization</label>
-                                <input type="text" name="organization" placeholder="Name of Organization" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Level</label>
-                                <input type="text" name="level" placeholder="Level" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Position</label>
-                                <input type="text" name="position" placeholder="Position" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
-                                <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Record
+            <!-- ========================================================================================= -->
+            <!-- Coach Expenses and Payments Content -->
+            <div id="expenses-payments" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Expenses and Payments</h1>
+                        <button onclick="toggleExpensesModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Record
                         </button>
-                    </form> 
+                    </div>
+
+                    <!-- SUBJECT TABLE -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full text-left whitespace-nowrap">
+                            <thead class="bg-green-600 text-white text-center">
+                                <tr>
+                                    <th class="py-3 px-4 border border-gray-300">Year</th>
+                                    <th class="py-3 px-4 border border-gray-300">Date</th>
+                                    <th class="py-3 px-4 border border-gray-300">Title of Activity</th>
+                                    <th class="py-3 px-4 border border-gray-300">Estimate Budget</th>
+                                    <th class="py-3 px-4 border border-gray-300">Actual Budget</th>
+                                    <th class="py-3 px-4 border border-gray-300">Variance</th>
+                                    <th class="py-3 px-4 border border-gray-300">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTable" class="text-gray-700 bg-white text-center"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD EXPENSES MODAL -->
+                <div id="expensesModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleExpensesModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                        <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Expenses</h2>
+
+                        <form id="ExpensesForm" class="space-y-4" onsubmit="return false;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Year</label>
+                                    <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Date</label>
+                                    <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Title of Activity</label>
+                                    <input type="text" name="title" placeholder="Title of Activity" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Estimate Budget</label>
+                                    <input type="number" name="estimate" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Actual Budget</label>
+                                    <input type="text" name="actual" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Variance</label>
+                                    <input type="text" name="variance" placeholder="0.00" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
+                                    <input type="text" name="remark" placeholder="Input Remark" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Record
+                            </button>
+                        </form> 
+                    </div> 
                 </div> 
-            </div> 
-        </div>
-
-        <!-- ========================================================================================= -->
-        <!-- Coach Seminars Content -->
-        <div id="seminars" class="tab-content hidden">
-            <div class="space-y-6">
-
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Seminars</h1>
-
-                    <button onclick="toggleSeminarsModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Record
-                    </button>
-                </div>
-
-                <!-- SUBJECT TABLE -->
-                <div>
-                    <table class="w-full text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="py-3">Year</th>
-                                <th class="py-3">Date</th>
-                                <th class="py-3">Venue</th>
-                                <th class="py-3">Title of Seminar / Workshop</th>
-                                <th class="py-3">Level</th>
-                                <th class="py-3">Remarks</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="seminarsTable" class="text-gray-700">
-                            
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
-            <!-- ADD Seminars MODAL -->
-            <div id="seminarsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleSeminarsModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
-                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Seminars</h2>
-
-                    <form id="SeminarsForm" class="space-y-4" onsubmit="return false;">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Year</label>
-                                <input type="text" name="year" placeholder="Seminar Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Date</label>
-                                <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Venue</label>
-                                <input type="text" name="venue" placeholder="Venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Title of Seminar / Workshop</label>
-                                <input type="text" name="seminar" placeholder="Title of Seminar / Workshop" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Level</label>
-                                <input type="text" name="level" placeholder="Level" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
-                                <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Record
+            <!-- ========================================================================================= -->
+            <!-- Coach Membership Content -->
+            <div id="membership" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Membership</h1>
+                        <button onclick="toggleMembershipModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Record
                         </button>
-                    </form> 
+                    </div>
+
+                    <!-- SUBJECT TABLE -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full text-left whitespace-nowrap">
+                            <thead class="bg-green-600 text-white text-center">
+                                <tr>
+                                    <th class="py-3 px-4 border border-gray-300">Year</th>
+                                    <th class="py-3 px-4 border border-gray-300">Date</th>
+                                    <th class="py-3 px-4 border border-gray-300">Venue</th>
+                                    <th class="py-3 px-4 border border-gray-300">Name of organization</th>
+                                    <th class="py-3 px-4 border border-gray-300">Level</th>
+                                    <th class="py-3 px-4 border border-gray-300">Position</th>
+                                    <th class="py-3 px-4 border border-gray-300">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membershipTable" class="text-gray-700 bg-white text-center"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD Membership MODAL -->
+                <div id="membershipModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleMembershipModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                        <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Membership</h2>
+
+                        <form id="MembershipForm" class="space-y-4" onsubmit="return false;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Year</label>
+                                    <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Date</label>
+                                    <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Venue</label>
+                                    <input type="text" name="venue" placeholder="Venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Name of Organization</label>
+                                    <input type="text" name="organization" placeholder="Name of Organization" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Level</label>
+                                    <input type="text" name="level" placeholder="Level" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Position</label>
+                                    <input type="text" name="position" placeholder="Position" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
+                                    <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Record
+                            </button>
+                        </form> 
+                    </div> 
                 </div> 
-            </div> 
-        </div>
-
-        <!-- ========================================================================================= -->
-        <!-- Coach Work History Content -->
-        <div id="coach-work-history" class="tab-content hidden">
-            <div class="space-y-6">
-
-                <!-- PAGE HEADER -->
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Work History</h1>
-
-                    <button onclick="toggleWorkHistoryModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
-                        + Add Record
-                    </button>
-                </div>
-
-                <!-- SUBJECT TABLE -->
-                <div>
-                    <table class="w-full text-left">
-                        <thead class="bg-green-600 text-white text-center">
-                            <tr>
-                                <th class="py-3">Year</th>
-                                <th class="py-3">Date</th>
-                                <th class="py-3">Work position</th>
-                                <th class="py-3">Name of Company</th>
-                                <th class="py-3">Remarks</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="workTable" class="text-gray-700">
-                            
-                        </tbody>
-                    </table>
-                </div>
-
             </div>
 
-            <!-- ADD Work History MODAL -->
-            <div id="workModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
-                    <button onclick="toggleWorkHistoryModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
-                    <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Work History</h2>
-
-                    <form id="WorkHistoryForm" class="space-y-4" onsubmit="return false;">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Year</label>
-                                <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div>
-                                <label class="block text-white font-medium mb-1 text-sm">Date</label>
-                                <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Work Position</label>
-                                <input type="text" name="work_position" placeholder="Work Position" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Name of Company</label>
-                                <input type="text" name="company" placeholder="Name of Company" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                            <div class="sm:col-span-2">
-                                <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
-                                <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
-                            Save Record
+            <!-- ========================================================================================= -->
+            <!-- Coach Seminars Content -->
+            <div id="seminars" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800">Seminars</h1>
+                        <button onclick="toggleSeminarsModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Record
                         </button>
-                    </form> 
+                    </div>
+
+                    <!-- SUBJECT TABLE -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full text-left whitespace-nowrap">
+                            <thead class="bg-green-600 text-white text-center">
+                                <tr>
+                                    <th class="py-3 px-4 border border-gray-300">Year</th>
+                                    <th class="py-3 px-4 border border-gray-300">Date</th>
+                                    <th class="py-3 px-4 border border-gray-300">Venue</th>
+                                    <th class="py-3 px-4 border border-gray-300">Title of Seminar / Workshop</th>
+                                    <th class="py-3 px-4 border border-gray-300">Level</th>
+                                    <th class="py-3 px-4 border border-gray-300">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seminarsTable" class="text-gray-700 bg-white text-center"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD Seminars MODAL -->
+                <div id="seminarsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleSeminarsModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                        <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Seminars</h2>
+
+                        <form id="SeminarsForm" class="space-y-4" onsubmit="return false;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Year</label>
+                                    <input type="text" name="year" placeholder="Seminar Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Date</label>
+                                    <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Venue</label>
+                                    <input type="text" name="venue" placeholder="Venue" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Title of Seminar / Workshop</label>
+                                    <input type="text" name="seminar" placeholder="Title of Seminar / Workshop" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Level</label>
+                                    <input type="text" name="level" placeholder="Level" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
+                                    <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Record
+                            </button>
+                        </form> 
+                    </div> 
                 </div> 
-            </div> 
-        </div>
+            </div>
 
-        <!-- ========================================================================================= -->
-        <!-- Coach Attachments Content -->
-        <div id="coach-attachments" class="tab-content hidden">
-            <p>This is the attachments.</p>
-        </div>
+            <!-- ========================================================================================= -->
+            <!-- Coach Work History Content -->
+            <div id="coach-work-history" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <!-- PAGE HEADER -->
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                        <h1 class="text-xl md:text-2xl font-bold text-gray-800"><i class="bi bi-person-workspace text-green-700 me-2"></i> Work History</h1>
+                        <button onclick="toggleWorkHistoryModal(true)"
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
+                            + Add Work Record
+                        </button>
+                    </div>
 
+                    <!-- SUBJECT TABLE -->
+                    <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                        <table class="min-w-full border border-gray-300 text-sm text-gray-700 whitespace-nowrap">
+                            <thead class="bg-gray-100 text-gray-700 text-center uppercase tracking-wider text-xs">
+                                <tr>
+                                    <th class="border px-4 py-3">Year / Term</th>
+                                    <th class="border px-4 py-3">Date Hired</th>
+                                    <th class="border px-4 py-3">Job Position</th>
+                                    <th class="border px-4 py-3">Company / Employer</th>
+                                    <th class="border px-4 py-3">Status / Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workTable" class="text-gray-700 text-center bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ADD Work History MODAL -->
+                <div id="workModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600 max-h-[90vh] overflow-y-auto">
+                        <button onclick="toggleWorkHistoryModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
+                        <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Work History</h2>
+
+                        <form id="WorkHistoryForm" class="space-y-4" onsubmit="return false;">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Year</label>
+                                    <input type="text" name="year" placeholder="Year" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div>
+                                    <label class="block text-white font-medium mb-1 text-sm">Date</label>
+                                    <input type="date" name="date" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Work Position</label>
+                                    <input type="text" name="work_position" placeholder="Work Position" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Name of Company</label>
+                                    <input type="text" name="company" placeholder="Name of Company" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-white font-medium mb-1 text-sm">Remarks</label>
+                                    <input type="text" name="remark" placeholder="Remarks" class="w-full bg-white text-gray-900 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md">
+                                Save Record
+                            </button>
+                        </form> 
+                    </div> 
+                </div> 
+            </div>
+
+            <!-- ========================================================================================= -->
+            <!-- Coach Attachments Content -->
+            <div id="coach-attachments" class="coach-tab-pane hidden">
+                <div class="space-y-4 border rounded p-4 mt-4 bg-white shadow-sm">
+                    <p>This is the attachments.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>  
+
+    <!-- PRINT PREVIEW MODAL (TELEPORTED) -->
+    <div id="coach_printModal" class="hidden items-center justify-center p-4" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85); z-index: 999999 !important;">
+        <div class="bg-gray-300 rounded-xl shadow-2xl flex flex-col relative overflow-hidden border-4 border-green-700" style="width: 100%; max-width: 1000px; height: 90vh;">
+            <div class="bg-green-700 text-white px-6 py-4 flex flex-col md:flex-row justify-between gap-4 items-center z-10 shadow-md">
+                <h2 class="text-xl font-bold tracking-wide">🖨️ Document Print Preview</h2>
+                <div class="space-x-3 w-full md:w-auto flex justify-end">
+                    <button onclick="triggerCoachIframePrint()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded font-bold shadow transition border border-blue-400">
+                        Print Document
+                    </button>
+                    <button onclick="toggleCoachPrintModal(false)" class="bg-gray-600 hover:bg-gray-500 text-white px-5 py-2 rounded font-bold shadow transition border border-gray-400">
+                        Close
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 w-full bg-gray-500 p-6 flex justify-center relative shadow-inner" style="overflow-y: auto;">
+                <iframe id="coach_printIframe" class="bg-white shadow-2xl border border-gray-300 rounded-sm" style="width: 100%; max-width: 8.5in; height: 100%; min-height: 11in;" src=""></iframe>
+            </div>
+        </div>
     </div>
-</div>  
-
-<!-- PRINT PREVIEW MODAL (TELEPORTED) -->
-<div id="coach_printModal" class="hidden items-center justify-center p-4" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85); z-index: 999999 !important;">
-    <div class="bg-gray-300 rounded-xl shadow-2xl flex flex-col relative overflow-hidden border-4 border-green-700" style="width: 100%; max-width: 1000px; height: 90vh;">
-        <!-- Modal Header -->
-        <div class="bg-green-700 text-white px-6 py-4 flex justify-between items-center z-10 shadow-md">
-            <h2 class="text-xl font-bold tracking-wide">🖨️ Document Print Preview</h2>
-            <div class="space-x-3">
-                <button onclick="triggerCoachIframePrint()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded font-bold shadow transition border border-blue-400">
-                    Print Document
-                </button>
-                <button onclick="toggleCoachPrintModal(false)" class="bg-gray-600 hover:bg-gray-500 text-white px-5 py-2 rounded font-bold shadow transition border border-gray-400">
-                    Close
-                </button>
-            </div>
-        </div>
-        <!-- Iframe Container -->
-        <div class="flex-1 w-full bg-gray-500 p-6 flex justify-center relative shadow-inner" style="overflow-y: auto;">
-            <iframe id="coach_printIframe" class="bg-white shadow-2xl border border-gray-300 rounded-sm" style="width: 100%; max-width: 8.5in; height: 100%; min-height: 11in;" src=""></iframe>
-        </div>
-    </div>
-</div>
 
 <script>
 window.currentUserRole = '{{ auth()->check() ? auth()->user()->role : '' }}';
@@ -1075,41 +1048,58 @@ window.hasCoachProfile = {{ (auth()->check() && auth()->user()->role === 'coach'
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // -----------------------
-    // 1. TAB SWITCHING
-    // -----------------------
-    const tabs = document.querySelectorAll('.tab-link');
-    const contents = document.querySelectorAll('.tab-content');
+    // --- UPDATED TAB LOGIC USING THE NEW CSS CLASSES ---
+    const tabs = document.querySelectorAll('.coach-tab-link');
+    const contents = document.querySelectorAll('.coach-tab-pane');
 
-    const defaultTab = document.querySelector('.tab-link[href="#coach-general-info"]');
+    const defaultTab = document.querySelector('.coach-tab-link[href="#coach-general-info"]');
     if (defaultTab) {
-        tabs.forEach(t => t.classList.remove('border-b-2', 'border-green-600', 'text-green-600'));
+        tabs.forEach(t => t.classList.remove('active-tab'));
         contents.forEach(c => c.classList.add('hidden'));
-        defaultTab.classList.add('border-b-2', 'border-green-600', 'text-green-600');
+        defaultTab.classList.add('active-tab');
         document.querySelector('#coach-general-info')?.classList.remove('hidden');
     }
 
     tabs.forEach(tab => {
         tab.addEventListener('click', e => {
             e.preventDefault();
-            tabs.forEach(t => t.classList.remove('border-b-2', 'border-green-600', 'text-green-600'));
+            tabs.forEach(t => t.classList.remove('active-tab'));
             contents.forEach(c => c.classList.add('hidden'));
-            tab.classList.add('border-b-2', 'border-green-600', 'text-green-600');
-            document.querySelector(tab.getAttribute('href'))?.classList.remove('hidden');
+            tab.classList.add('active-tab');
+            const targetId = tab.getAttribute('href');
+            if(targetId) {
+                document.querySelector(targetId)?.classList.remove('hidden');
+            }
         });
     });
 
-    // -----------------------
-    // 2. HELPERS & GLOBALS
-    // -----------------------
+    // --- AUTO CALCULATE AGE ---
+    const birthdateInput = document.getElementById('coach_birthdate');
+    const ageInput = document.getElementById('coach_age');
+
+    if (birthdateInput && ageInput) {
+        birthdateInput.addEventListener('change', function() {
+            if (this.value) {
+                const today = new Date();
+                const birthDate = new Date(this.value);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                ageInput.value = age >= 0 ? age : 0;
+            } else {
+                ageInput.value = '';
+            }
+        });
+    }
+
     const byId = id => document.getElementById(id);
     window.newCoachData = {
         generalInfo: {}, achievements: [], schedule: [], expenses: [], memberships: [], seminars: [], workHistory: []   
     };
 
-    // -----------------------
-    // 3. LOCK/UNLOCK LOGIC
-    // -----------------------
     function lockCoachFormInitial() {
         const form = byId('coachForm');
         if (form) {
@@ -1166,11 +1156,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (byId('coach_method')) byId('coach_method').value = 'PUT';
     }
 
+    // --- AUTO-UNLOCK FORM IF ON /create ROUTE ---
     if (window.currentUserRole !== 'coach') {
-        lockCoachFormInitial();
+        if (window.location.pathname.includes('/create')) {
+            unlockCoachFormForNew();
+        } else {
+            lockCoachFormInitial();
+        }
     }
 
-    // Connect Action Buttons & Picture Previews
     byId('coach_addNewBtn')?.addEventListener('click', unlockCoachFormForNew);
     byId('coach_editBtn')?.addEventListener('click', unlockCoachFormForEditing);
 
@@ -1209,6 +1203,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     byId('coach_noPictureText')?.classList.remove('hidden');
                 } else if (el.tagName === 'SELECT') el.selectedIndex = 0;
                 else el.value = '';
+                
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
             });
         }
 
@@ -1230,31 +1226,30 @@ document.addEventListener('DOMContentLoaded', () => {
         lockCoachFormInitial();
     });
 
-    // TELEPORT PRINT MODAL TO BODY
     const printModalEl = document.getElementById('coach_printModal');
     if (printModalEl) document.body.appendChild(printModalEl);
 
-    // -----------------------
-    // 4. LOAD SPORTS
-    // -----------------------
     async function loadAvailableSports() {
         try {
             const response = await fetch('{{ route('coaches.available-sports') }}');
             const data = await response.json();
             const sportSelect = byId('coach_sport_event');
-            if (sportSelect && !sportSelect.disabled) {
+            
+            // Only apply the filter if the backend actually returns a valid array of available sports
+            if (sportSelect && !sportSelect.disabled && data && Array.isArray(data.available)) {
                 const allOptions = Array.from(sportSelect.querySelectorAll('option')).slice(1);
                 allOptions.forEach(option => {
                     option.style.display = data.available.includes(option.value) ? '' : 'none';
                 });
             }
-        } catch (error) { console.error('Error:', error); }
+        } catch (error) { 
+            console.error('Error fetching available sports:', error); 
+        }
     }
-    loadAvailableSports();
+    
+    // Comment this out completely if you just want to show ALL sports in the database
+    // loadAvailableSports();
 
-    // -----------------------
-    // 5. DATA POPULATOR
-    // -----------------------
     const updateBase = '{{ url('/coaches') }}';
     function populateCoachData(full) {
         const generalForm = byId('coachForm');
@@ -1279,7 +1274,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (el && el.type !== 'file' && el.tagName !== 'SELECT') { el.value = full[dbField] ?? ''; }
         }
 
-        // SMART DROPDOWN MATCHER
         const selectMappings = [
             { name: 'coach_gender', value: full.coach_gender || full.gender },
             { name: 'coach_marital_status', value: full.coach_marital_status || full.marital_status },
@@ -1291,30 +1285,35 @@ document.addEventListener('DOMContentLoaded', () => {
         selectMappings.forEach(mapping => {
             const el = generalForm?.querySelector(`[name="${mapping.name}"]`);
             if (el && mapping.value) {
-                let valToMatch = String(mapping.value).trim().toLowerCase();
-                let matched = false;
-                
-                for(let i = 0; i < el.options.length; i++) {
-                    if(el.options[i].value.toLowerCase() === valToMatch) {
-                        el.selectedIndex = i;
-                        matched = true;
-                        break;
-                    }
-                }
-                
-                if(!matched) {
+                // If it's a dropdown menu, find the matching option
+                if (el.tagName === 'SELECT') {
+                    let valToMatch = String(mapping.value).trim().toLowerCase();
+                    let matched = false;
+                    
                     for(let i = 0; i < el.options.length; i++) {
-                        if(el.options[i].value.toLowerCase().includes(valToMatch) && el.options[i].value !== "") {
+                        if(el.options[i].value.toLowerCase() === valToMatch) {
                             el.selectedIndex = i;
+                            matched = true;
                             break;
                         }
                     }
+                    
+                    if(!matched) {
+                        for(let i = 0; i < el.options.length; i++) {
+                            if(el.options[i].value.toLowerCase().includes(valToMatch) && el.options[i].value !== "") {
+                                el.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    el.dispatchEvent(new Event('change'));
+                } else {
+                    // If it's a hidden input, just assign the value directly
+                    el.value = mapping.value;
                 }
-                el.dispatchEvent(new Event('change'));
             }
         });
 
-        // DATE MATCHER
         ['coach_birthdate', 'coach_year_graduated', 'coach_graduated', 'highschool_graduated', 'date_hired', 'date_resigned', 'coach_inactive_date'].forEach(field => {
             const el = generalForm?.querySelector(`[name="${field}"]`);
             if (el && full[field]) {
@@ -1367,9 +1366,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error('Error fetching coach URL:', err));
     }
 
-    // -----------------------
-    // 6. LIVE SEARCH
-    // -----------------------
     const searchInput = byId('coach_search');
     const resultsBox = byId('coach_searchResults');
     if (searchInput && resultsBox) {
@@ -1423,9 +1419,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // -----------------------
-    // 7. MODAL TOGGLES & TABLES
-    // -----------------------
     window.toggleCoachAchievementModal = (s) => byId('coach-AchievementModal')?.classList.toggle('hidden', !s);
     window.toggleScheduleModal = (s) => byId('scheduleModal')?.classList.toggle('hidden', !s);
     window.toggleExpensesModal = (s) => byId('expensesModal')?.classList.toggle('hidden', !s);
@@ -1474,11 +1467,53 @@ document.addEventListener('DOMContentLoaded', () => {
     handleModuleForm('SeminarsForm', 'seminarsTable', 'seminars', { year: 'Year', date: 'Date', venue: 'venue', seminar: 'Title of Seminar / Workshop', level: 'Level', remark: 'Remarks' });
     handleModuleForm('WorkHistoryForm', 'workTable', 'workHistory', { year: 'Year', date: 'Date', work_position: 'Position', company: 'Company', remark: 'Remarks' });
 
-    // -----------------------
-    // 8. FINAL SAVE
-    // -----------------------
+    // --- MANDATORY FIELD VALIDATION HIGHLIGHTS ---
+    const generalForm = byId('coachForm');
+    function validateRequiredFields() {
+        if (!generalForm) return true;
+        let isValid = true;
+        let firstInvalid = null;
+
+        generalForm.querySelectorAll('[required]').forEach(el => {
+            if (!el.value || !el.value.trim()) {
+                isValid = false;
+                el.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                if (!firstInvalid) firstInvalid = el;
+            } else {
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+            }
+        });
+
+        if (!isValid) {
+            // Smoothly scroll to the first missing field.
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        return isValid;
+    }
+
+    // Clear highlights on input change
+    if (generalForm) {
+        generalForm.querySelectorAll('[required]').forEach(el => {
+            el.addEventListener('input', () => {
+                if (el.value && el.value.trim()) {
+                    el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
+            });
+            el.addEventListener('change', () => {
+                if (el.value && el.value.trim()) {
+                    el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
+            });
+        });
+    }
+
     function performFinalSave(e) {
         if (e) e.preventDefault();
+        if (!validateRequiredFields()) return;
+
         const form = byId('coachForm');
         if (form) {
             form.querySelectorAll('input[name], select[name], textarea[name]').forEach(input => {
@@ -1502,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return d;
         })
         .then(data => {
-            alert('✅ Profile saved successfully!');
+            alert('✅ Profile saved successfully!' + (data && data.onboarding ? '\n\n' + data.onboarding : ''));
             if (window.currentUserRole !== 'coach' && data?.id) { window.location.href = `{{ url('/coach') }}?coach_id=${data.id}`; } 
             else { location.reload(); }
         })
@@ -1514,9 +1549,6 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('coach_updateBtn')?.addEventListener('click', performFinalSave);
 });
 
-// -----------------------
-// 10. PRINT LOGIC
-// -----------------------
 window.printCoach = function() {
     const coachId = document.getElementById('selected_coach_id').value;
     if (coachId) { document.getElementById('coach_printIframe').src = '/coach/' + coachId + '/print'; toggleCoachPrintModal(true); } 

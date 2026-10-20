@@ -6,6 +6,7 @@ use App\Models\Coach;
 use App\Models\CoachAchievement;
 use App\Models\CoachWorkHistory;
 use App\Models\CoachMembership;
+use App\Services\CoachOnboarding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,30 +20,29 @@ class CoachController extends Controller
         if (auth()->check() && auth()->user()->role === 'coach') {
             $coach = auth()->user()->coach;
             if (!$coach) {
-                // Coach user doesn't have a coach profile yet, show creation form
                 return view('features.coach', compact('coach'));
             }
-            // Load coach with related data - include ALL relationships so all tabs display data
             $coach->load('achievements', 'workHistories', 'memberships', 'schedule', 'expenses', 'seminars');
             return view('features.coach', compact('coach'));
         }
-        
-        // Admins see all coaches (🚀 CATCH DASHBOARD FILTER CLICKS HERE)
+
+        // Admins see all coaches with Pagination
         $query = Coach::query();
 
         if ($request->filled('status')) {
-            // Your database column is called 'coach_status'
             $query->where('coach_status', $request->status);
         }
 
-        $coaches = $query->get();
-        
+        $coaches = $query->orderBy('coach_last_name', 'asc')
+                         ->orderBy('coach_first_name', 'asc')
+                         ->paginate(10)
+                         ->withQueryString();
+
         return view('c_lists.coach_lists', compact('coaches'));
     }
 
     public function create()
     {
-        // If coach user, redirect to index (their profile page)
         if (auth()->check() && auth()->user()->role === 'coach') {
             return redirect()->route('coaches.index');
         }
@@ -51,13 +51,11 @@ class CoachController extends Controller
 
     public function store(Request $request)
     {
-        // Normalize payload (in case frontend sends nested structure)
         $payload = $request->all();
         $general = is_array($payload) && array_key_exists('generalInfo', $payload) && is_array($payload['generalInfo'])
             ? $payload['generalInfo']
             : $payload;
 
-        // Validate required fields
         $rules = [
             'coach_first_name' => 'required|string|max:255',
             'coach_last_name' => 'required|string|max:255',
@@ -75,11 +73,9 @@ class CoachController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // If coach user is updating their own profile
         $isCoachUser = auth()->check() && auth()->user()->role === 'coach';
         $coach = $isCoachUser ? auth()->user()->coach : null;
 
-        // Mass assign coach data from general info
         $fields = [
             'coach_last_name', 'coach_first_name', 'coach_middle_initial',
             'coach_gender', 'coach_birthdate', 'coach_age', 'coach_blood_type',
@@ -102,21 +98,18 @@ class CoachController extends Controller
         }
 
         try {
-            // If coach user updating their own profile, update instead of create
             if ($isCoachUser && $coach) {
                 $coach->update($data);
-                
+
                 if ($request->expectsJson() || $request->wantsJson() || $request->isJson()) {
                     return response()->json(['success' => true, 'coach' => $coach], 200);
                 }
                 return redirect()->route('coaches.index')->with('success', 'Your profile has been updated successfully!');
             }
 
-            // Otherwise, create new coach (for admins or first-time coach setup)
             $coachData = DB::transaction(function () use ($data, $payload) {
                 $c = Coach::create($data);
 
-                // ACHIEVEMENTS
                 if (!empty($payload['achievements']) && is_array($payload['achievements'])) {
                     foreach ($payload['achievements'] as $ach) {
                         CoachAchievement::create([
@@ -132,7 +125,6 @@ class CoachController extends Controller
                     }
                 }
 
-                // SCHEDULES
                 if (!empty($payload['schedule']) && is_array($payload['schedule'])) {
                     foreach ($payload['schedule'] as $sch) {
                         $c->schedule()->create([
@@ -140,79 +132,70 @@ class CoachController extends Controller
                             'academic_year' => $sch['academic_year'] ?? null,
                             'count_a' => $sch['count_a'] ?? 0,
                             'count_b' => $sch['count_b'] ?? 0,
-                            'count_c' => $sch['count_c'] ?? 0, 
-                            'remarks' => $sch['remarks'] ?? null,   
+                            'count_c' => $sch['count_c'] ?? 0,
+                            'remarks' => $sch['remarks'] ?? null,
                         ]);
                     }
                 }
 
-                // EXPENSES
                 if (!empty($payload['expenses']) && is_array($payload['expenses'])) {
                     foreach ($payload['expenses'] as $exp) {
                         $c->expenses()->create([
-                            'year' => $exp['year'] ?? null,          
+                            'year' => $exp['year'] ?? null,
                             'date' => $exp['date'] ?? null,
                             'title' => $exp['title'] ?? null,
                             'estimate_budget' => $exp['estimate'] ?? null,
-                            'notes' => $exp['notes'] ?? null,
                             'actual_budget' => $exp['actual'] ?? null,
-                            'variance' => $exp['variance'] ?? null,     
-                            'remark' => $exp['remark'] ?? null,             
+                            'variance' => $exp['variance'] ?? null,
+                            'remark' => $exp['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // MEMBERSHIPS
                 if (!empty($payload['memberships']) && is_array($payload['memberships'])) {
                     foreach ($payload['memberships'] as $mem) {
                         $c->memberships()->create([
-                            'year' => $mem['year'] ?? null,     
+                            'year' => $mem['year'] ?? null,
                             'date' => $mem['date'] ?? null,
-                            'venue' => $mem['venue'] ?? null,          
-                            'name_of_organization' => $mem['organization'] ?? null,         
-                            'level' => $mem['level'] ?? null,    
+                            'venue' => $mem['venue'] ?? null,
+                            'name_of_organization' => $mem['organization'] ?? null,
+                            'level' => $mem['level'] ?? null,
                             'position' => $mem['position'] ?? null,
-                            'remarks' => $mem['remark'] ?? null,                   
+                            'remarks' => $mem['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // SEMINARS
                 if (!empty($payload['seminars']) && is_array($payload['seminars'])) {
                     foreach ($payload['seminars'] as $sem) {
                         $c->seminars()->create([
                             'year' => $sem['year'] ?? null,
                             'date' => $sem['date'] ?? null,
-                            'venue' => $sem['venue'] ?? null,  
+                            'venue' => $sem['venue'] ?? null,
                             'title_of_seminar_workshop' => $sem['seminar'] ?? null,
-                            'level' => $sem['level'] ?? null,     
-                            'remarks' => $sem['remark'] ?? null,         
+                            'level' => $sem['level'] ?? null,
+                            'remarks' => $sem['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // WORK HISTORY
                 if (!empty($payload['workHistory']) && is_array($payload['workHistory'])) {
                     foreach ($payload['workHistory'] as $w) {
                         CoachWorkHistory::create([
                             'coach_id' => $c->id,
                             'year' => $w['year'] ?? null,
                             'date' => $w['date'] ?? null,
-                            'work_position' => $w['work_position'] ?? null,    
-                            'company_name' => $w['company'] ?? null,     
-                            'remarks' => $w['remark'] ?? null,       
+                            'work_position' => $w['work_position'] ?? null,
+                            'company_name' => $w['company'] ?? null,
+                            'remarks' => $w['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // If the current authenticated user is a coach user, link the newly
-                // created coach profile to their user record so subsequent loads
-                // (auth()->user()->coach) return the correct model.
                 if (auth()->check()) {
                     $user = auth()->user();
                     if ($user->role === 'coach') {
                         $user->coach_id = $c->id;
-                        // Preserve existing coach_sport on user if coach data doesn't include one
                         if (empty($user->coach_sport) && !empty($c->coach_sport_event)) {
                             $user->coach_sport = $c->coach_sport_event;
                         }
@@ -223,21 +206,29 @@ class CoachController extends Controller
                 return $c;
             });
 
-            // Handle picture upload if present
             if ($request->hasFile('coach_picture')) {
                 $path = $request->file('coach_picture')->store('coaches', 'public');
                 $coachData->update(['coach_picture' => $path]);
+            }
+
+            // 📧 AUTOMATED COACH ONBOARDING (admin-created coaches only):
+            // auto-create the login account and email the credentials + password-setup link.
+            $onboarding = null;
+            if (auth()->check() && auth()->user()->role === 'admin') {
+                $onboarding = CoachOnboarding::onboard($coachData);
             }
 
             if ($request->expectsJson() || $request->wantsJson() || $request->isJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Coach created successfully',
+                    'onboarding' => $onboarding,
                     'coach' => $coachData
                 ], 201);
             }
 
-            return redirect()->route('coaches.show', $coachData->id)->with('success', 'Coach created successfully');
+            return redirect()->route('coaches.show', $coachData->id)
+                ->with('success', 'Coach created successfully' . ($onboarding ? '. ' . $onboarding : ''));
         } catch (\Exception $e) {
             Log::error('Coach creation failed', ['exception' => $e->getMessage()]);
 
@@ -251,13 +242,11 @@ class CoachController extends Controller
 
     public function update(Request $request, Coach $coach)
     {
-        // Normalize payload
         $payload = $request->all();
         $general = is_array($payload) && array_key_exists('generalInfo', $payload) && is_array($payload['generalInfo'])
             ? $payload['generalInfo']
             : $payload;
 
-        // Validate required fields
         $rules = [
             'coach_first_name' => 'required|string|max:255',
             'coach_last_name' => 'required|string|max:255',
@@ -275,7 +264,6 @@ class CoachController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // Update coach fields
         $fields = [
             'coach_last_name', 'coach_first_name', 'coach_middle_initial',
             'coach_gender', 'coach_birthdate', 'coach_age', 'coach_blood_type',
@@ -301,7 +289,6 @@ class CoachController extends Controller
             DB::transaction(function () use ($coach, $data, $payload) {
                 $coach->update($data);
 
-                // DELETE AND REPLACE ALL MODULES
                 $coach->achievements()->delete();
                 $coach->schedule()->delete();
                 $coach->expenses()->delete();
@@ -309,7 +296,6 @@ class CoachController extends Controller
                 $coach->seminars()->delete();
                 $coach->workHistories()->delete();
 
-                // ACHIEVEMENTS
                 if (!empty($payload['achievements']) && is_array($payload['achievements'])) {
                     foreach ($payload['achievements'] as $ach) {
                         CoachAchievement::create([
@@ -325,7 +311,6 @@ class CoachController extends Controller
                     }
                 }
 
-                // SCHEDULES
                 if (!empty($payload['schedule']) && is_array($payload['schedule'])) {
                     foreach ($payload['schedule'] as $sch) {
                         $coach->schedule()->create([
@@ -333,71 +318,67 @@ class CoachController extends Controller
                             'academic_year' => $sch['academic_year'] ?? null,
                             'count_a' => $sch['count_a'] ?? 0,
                             'count_b' => $sch['count_b'] ?? 0,
-                            'count_c' => $sch['count_c'] ?? 0,   
-                            'remarks' => $sch['remarks'] ?? null,   
+                            'count_c' => $sch['count_c'] ?? 0,
+                            'remarks' => $sch['remarks'] ?? null,
                         ]);
                     }
                 }
 
-                // EXPENSES
                 if (!empty($payload['expenses']) && is_array($payload['expenses'])) {
                     foreach ($payload['expenses'] as $exp) {
                         $coach->expenses()->create([
-                            'year' => $exp['year'] ?? null,          
+                            'year' => $exp['year'] ?? null,
                             'date' => $exp['date'] ?? null,
                             'title' => $exp['title'] ?? null,
                             'estimate_budget' => $exp['estimate'] ?? null,
                             'actual_budget' => $exp['actual'] ?? null,
-                            'variance' => $exp['variance'] ?? null,     
-                            'remark' => $exp['remark'] ?? null,              
+                            'variance' => $exp['variance'] ?? null,
+                            'remark' => $exp['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // MEMBERSHIPS
                 if (!empty($payload['memberships']) && is_array($payload['memberships'])) {
                     foreach ($payload['memberships'] as $mem) {
                         $coach->memberships()->create([
-                            'year' => $mem['year'] ?? null,     
+                            'year' => $mem['year'] ?? null,
                             'date' => $mem['date'] ?? null,
-                            'venue' => $mem['venue'] ?? null,          
-                            'name_of_organization' => $mem['organization'] ?? null,         
-                            'level' => $mem['level'] ?? null,    
+                            'venue' => $mem['venue'] ?? null,
+                            'name_of_organization' => $mem['organization'] ?? null,
+                            'level' => $mem['level'] ?? null,
                             'position' => $mem['position'] ?? null,
-                            'remarks' => $mem['remark'] ?? null,                 
+                            'remarks' => $mem['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // SEMINARS
                 if (!empty($payload['seminars']) && is_array($payload['seminars'])) {
                     foreach ($payload['seminars'] as $sem) {
                         $coach->seminars()->create([
                             'year' => $sem['year'] ?? null,
                             'date' => $sem['date'] ?? null,
-                            'venue' => $sem['venue'] ?? null,  
+                            'venue' => $sem['venue'] ?? null,
                             'title_of_seminar_workshop' => $sem['seminar'] ?? null,
-                            'level' => $sem['level'] ?? null,     
-                            'remarks' => $sem['remark'] ?? null,         
+                            'level' => $sem['level'] ?? null,
+                            'remarks' => $sem['remark'] ?? null,
                         ]);
                     }
                 }
 
-                // WORK HISTORY
                 if (!empty($payload['workHistory']) && is_array($payload['workHistory'])) {
                     foreach ($payload['workHistory'] as $w) {
-                        $coach->workHistories()->create([
+                        CoachWorkHistory::create([
+                            'coach_id' => $coach->id,
                             'year' => $w['year'] ?? null,
                             'date' => $w['date'] ?? null,
-                            'work_position' => $w['work_position'] ?? null,    
-                            'company_name' => $w['company'] ?? null,     
-                            'remarks' => $w['remark'] ?? null,       
+                            'work_position' => $w['work_position'] ?? null,
+                            'company_name' => $w['company'] ?? null,
+                            'remarks' => $w['remark'] ?? null,
                         ]);
                     }
                 }
             });
 
-            // Handle picture upload if present
             if ($request->hasFile('coach_picture')) {
                 $path = $request->file('coach_picture')->store('coaches', 'public');
                 $coach->update(['coach_picture' => $path]);
@@ -423,9 +404,6 @@ class CoachController extends Controller
         }
     }
 
-    /**
-     * Search coaches (AJAX endpoint).
-     */
     public function search(Request $request)
     {
         $query = $request->input('q', '');
@@ -443,26 +421,22 @@ class CoachController extends Controller
 
     public function show(Request $request, Coach $coach)
     {
-        // Load relationships - use exact method names from Coach model
         $coach->load([
-            'achievements', 
-            'schedule',       // This will be 'schedule' in JSON
-            'expenses', 
-            'memberships', 
-            'seminars', 
-            'workHistories'   // This will be 'workHistories' in JSON (plural)
+            'achievements',
+            'schedule',
+            'expenses',
+            'memberships',
+            'seminars',
+            'workHistories'
         ]);
 
         $coach->picture_url = $coach->coach_picture ? asset('storage/' . $coach->coach_picture) : null;
 
-        // Return the model - Laravel auto-includes all loaded relationships
         return response()->json($coach);
     }
 
-    // Get available sports (exclude already assigned sports)
     public function getAvailableSports()
     {
-        // All available sports
         $allSports = [
             'Basketball',
             'Volleyball',
@@ -474,13 +448,11 @@ class CoachController extends Controller
             'Boxing',
         ];
 
-        // Get sports already assigned to coaches
         $assignedSports = Coach::whereNotNull('coach_sport_event')
             ->pluck('coach_sport_event')
             ->unique()
             ->toArray();
 
-        // Filter out assigned sports
         $availableSports = array_diff($allSports, $assignedSports);
 
         return response()->json([
@@ -489,11 +461,9 @@ class CoachController extends Controller
         ]);
     }
 
-    // --- 🖨️ ADDED PRINT PROFILE METHOD FOR COACHES ---
     public function printProfile($id)
     {
         $coach = \App\Models\Coach::findOrFail($id);
-        // Uses the exact same view as the athletes!
         return view('features.print_profile', compact('coach'));
     }
 }

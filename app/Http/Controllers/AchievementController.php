@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Achievement;
 use App\Models\CoachAchievement;
+use App\Support\AchievementDate;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator; // 🚀 Added this for combined pagination!
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AchievementController extends Controller
 {
@@ -28,7 +29,7 @@ class AchievementController extends Controller
             'year' => 'required|string',
             'month_day' => 'required|string',
             'event' => 'required|string',
-            'venue' => 'required|date',
+            'venue' => 'required|string', // was 'date' by mistake - a venue is a place name
             'award' => 'required|string',
             'category' => 'nullable|string',
             'remarks' => 'nullable|string',
@@ -81,88 +82,116 @@ class AchievementController extends Controller
     }
 
     /**
-     * Display a global view of all achievements (Master List) for the new page.
+     * Display a global view of all achievements (Master List).
+     * Always sorted newest -> oldest by the DATE ACHIEVED (year + month_day),
+     * and filterable by Month and Year of that date.
      */
     public function globalIndex(Request $request)
     {
-        $user = auth()->user();
-        
-        // Default to 'all' if no type is selected
-        $type = $request->query('type', 'all');
-        $month = $request->query('month');
+        $user   = auth()->user();
+        $type   = $request->query('type', 'all');
+        $month  = $request->query('month');
+        $year   = $request->query('year');
         $search = $request->query('search');
 
+        $items = collect();
+
         // =========================================
-        // 1. BUILD STUDENT-ATHLETE QUERY
+        // 1. STUDENT-ATHLETE ACHIEVEMENTS
         // =========================================
-        $athleteQuery = Achievement::with('athlete');
-        if ($user->role === 'coach') {
-            $coachSport = $user->coach->coach_sport_event ?? null;
-            if ($coachSport) {
-                $athleteQuery->whereHas('athlete', function($q) use ($coachSport) {
-                    $q->where('sport_event', $coachSport);
+        if ($type !== 'coach') {
+            $athleteQuery = Achievement::with('athlete');
+
+            if ($user->role === 'coach') {
+                $coachSport = $user->coach->coach_sport_event ?? null;
+                if ($coachSport) {
+                    $athleteQuery->whereHas('athlete', function ($q) use ($coachSport) {
+                        $q->where('sport_event', $coachSport);
+                    });
+                } else {
+                    $athleteQuery->whereNull('id');
+                }
+            }
+
+            if ($search) {
+                $athleteQuery->where(function ($q) use ($search) {
+                    $q->where('event', 'LIKE', "%{$search}%")->orWhere('award', 'LIKE', "%{$search}%");
                 });
-            } else {
-                $athleteQuery->whereNull('id');
+            }
+
+            foreach ($athleteQuery->get() as $item) {
+                $item->model_type = 'athlete';
+                $items->push($item);
             }
         }
-        if ($month) { $athleteQuery->whereMonth('created_at', $month); }
-        if ($search) {
-            $athleteQuery->where(function($q) use ($search) {
-                $q->where('event', 'LIKE', "%{$search}%")->orWhere('award', 'LIKE', "%{$search}%");
-            });
-        }
 
         // =========================================
-        // 2. BUILD COACH QUERY
+        // 2. COACH ACHIEVEMENTS
         // =========================================
-        $coachQuery = CoachAchievement::with('coach');
-        if ($user->role === 'coach') {
-            $coachId = $user->coach->id ?? null;
-            if ($coachId) {
-                $coachQuery->where('coach_id', $coachId);
-            } else {
-                $coachQuery->whereNull('id');
+        if ($type !== 'athlete') {
+            $coachQuery = CoachAchievement::with('coach');
+
+            if ($user->role === 'coach') {
+                $coachId = $user->coach->id ?? null;
+                if ($coachId) {
+                    $coachQuery->where('coach_id', $coachId);
+                } else {
+                    $coachQuery->whereNull('id');
+                }
+            }
+
+            if ($search) {
+                $coachQuery->where(function ($q) use ($search) {
+                    $q->where('sports_event', 'LIKE', "%{$search}%")->orWhere('award', 'LIKE', "%{$search}%");
+                });
+            }
+
+            foreach ($coachQuery->get() as $item) {
+                $item->model_type = 'coach';
+                $items->push($item);
             }
         }
-        if ($month) { $coachQuery->whereMonth('created_at', $month); }
-        if ($search) {
-            $coachQuery->where(function($q) use ($search) {
-                $q->where('sports_event', 'LIKE', "%{$search}%")->orWhere('award', 'LIKE', "%{$search}%");
-            });
-        }
 
         // =========================================
-        // 3. EXECUTE BASED ON TYPE SELECTED
+        // 3. DATE ACHIEVED -> YEAR LIST -> FILTER -> SORT
         // =========================================
-        if ($type === 'athlete') {
-            $achievements = $athleteQuery->latest()->paginate(15);
-            $achievements->getCollection()->transform(function($item) { $item->model_type = 'athlete'; return $item; });
-        } elseif ($type === 'coach') {
-            $achievements = $coachQuery->latest()->paginate(15);
-            $achievements->getCollection()->transform(function($item) { $item->model_type = 'coach'; return $item; });
-        } else {
-            // "ALL" SELECTED -> MERGE BOTH TABLES!
-            $athletes = $athleteQuery->get()->map(function($item) { $item->model_type = 'athlete'; return $item; });
-            $coaches = $coachQuery->get()->map(function($item) { $item->model_type = 'coach'; return $item; });
-            
-            // Combine and sort by newest first
-            $combined = $athletes->merge($coaches)->sortByDesc('created_at')->values();
-            
-            // Manually Paginate the merged list
-            $page = LengthAwarePaginator::resolveCurrentPage() ?: 1;
-            $perPage = 15;
-            $achievements = new LengthAwarePaginator(
-                $combined->forPage($page, $perPage),
-                $combined->count(),
-                $perPage,
-                $page,
-                ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
-            );
+        foreach ($items as $item) {
+            $item->achieved_at = AchievementDate::from($item);
         }
 
-        $achievements->appends($request->all());
+        // Year dropdown options (built before the month/year filter is applied)
+        $years = $items->map(fn ($i) => $i->achieved_at->year)->unique()->values();
+        if ($year && ! $years->contains((int) $year)) {
+            $years->push((int) $year);
+        }
+        $years = $years->sortDesc()->values();
 
-        return view('features.achievements', compact('achievements', 'type'));
+        $items = $items->filter(function ($i) use ($month, $year) {
+            if ($month && $i->achieved_at->month !== (int) $month) return false;
+            if ($year && $i->achieved_at->year !== (int) $year) return false;
+            return true;
+        });
+
+        // Strict newest -> oldest (ties broken by newest recorded first)
+        $items = $items->sort(function ($a, $b) {
+            return [$b->achieved_at->timestamp, optional($b->created_at)->timestamp ?? 0]
+               <=> [$a->achieved_at->timestamp, optional($a->created_at)->timestamp ?? 0];
+        })->values();
+
+        // =========================================
+        // 4. PAGINATE
+        // =========================================
+        $perPage = 15;
+        $page = LengthAwarePaginator::resolveCurrentPage() ?: 1;
+
+        $achievements = new LengthAwarePaginator(
+            $items->forPage($page, $perPage)->values(),
+            $items->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        return view('features.achievements', compact('achievements', 'type', 'years'));
     }
 }

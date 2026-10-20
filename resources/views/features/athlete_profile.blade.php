@@ -67,23 +67,23 @@
                     Personal Details
                 </h3>
                 <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
                         <span class="text-gray-500">Birthdate</span>
                         <span class="font-medium text-gray-900">{{ $athlete->birthdate ? $athlete->birthdate->format('M d, Y') : '-' }}</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
                         <span class="text-gray-500">Age</span>
                         <span class="font-medium text-gray-900">{{ $athlete->age ?? '-' }}</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
                         <span class="text-gray-500">Gender</span>
                         <span class="font-medium text-gray-900">{{ $athlete->gender ?? '-' }}</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
                         <span class="text-gray-500">Civil Status</span>
                         <span class="font-medium text-gray-900">{{ $athlete->marital_status ?? '-' }}</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex flex-col md:flex-row justify-between gap-4">
                         <span class="text-gray-500">Nationality</span>
                         <span class="font-medium text-gray-900">{{ $athlete->nationality ?? 'Filipino' }}</span>
                     </div>

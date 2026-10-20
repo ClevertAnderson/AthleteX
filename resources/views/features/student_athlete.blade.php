@@ -3,15 +3,15 @@
 @section('title', 'Student Athletes')
 
 @section('content')
-    <div class="space-y-6 w-full">
-    <div class="bg-white p-6 flex items-center justify-between">
-        <div class="flex-1 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-0">Student Athlete</h1>
+    <div class="space-y-6 w-full pt-20 md:pt-6 p-4">
+    <div class="bg-white p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm rounded-lg">
+        <div class="flex-1 text-center md:text-left">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-0">Student Athlete</h1>
         </div>
         <div>
-            <a href="{{ route('student.athletes') }}" 
-            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
-                Student Athlete List
+            <a href="{{ route('athletes.index') }}" 
+            class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition inline-block text-sm md:text-base font-semibold shadow">
+                <i class="bi bi-arrow-left"></i> Back to Athlete List
             </a>
         </div>
     </div>
@@ -31,33 +31,28 @@
             </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex items-center gap-2">
-            <button id="addNewBtn" type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
-                + Add New Athlete
-            </button>
-
-            <button id="saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm">
+        <div class="flex flex-wrap items-center gap-2">
+            <button id="saveBtn" type="button" class="hidden px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition cursor-pointer shadow-sm w-full sm:w-auto">
                 Save Athlete
             </button>
 
-            <button id="editBtn" type="button" class="hidden px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer shadow-sm">
+            <button id="editBtn" type="button" class="hidden px-4 py-2 rounded bg-yellow-500 text-white hover:bg-yellow-600 transition cursor-pointer shadow-sm w-full sm:w-auto">
                 Edit Athlete
             </button>
 
-            <button id="updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm">
+            <button id="updateBtn" type="button" class="hidden px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition cursor-pointer shadow-sm w-full sm:w-auto">
                 Update Athlete
             </button>
 
-            <button id="cancelBtn" type="button" onclick="clearAthleteData()" class="hidden px-5 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition cursor-pointer font-medium shadow-sm border border-gray-300">
+            <button id="cancelBtn" type="button" onclick="clearAthleteData()" class="hidden px-5 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition cursor-pointer font-medium shadow-sm border border-gray-300 w-full sm:w-auto">
                 Cancel
             </button>
         </div>
     </div>
 
     <!-- TABS NAVIGATION -->
-    <nav class="mb-6 w-full overflow-x-auto h-8">
-            <ul class="flex space-x-2 min-w-max">
+    <nav class="mb-6 w-full overflow-x-auto h-12">
+            <ul class="flex space-x-2 min-w-max pb-2">
                 <li id="tab-general-info">
                     <a href="#general-info" 
                     class="tab-link whitespace-nowrap px-4 py-2 text-gray-700 font-medium border-b-2 border-transparent hover:border-green-600 hover:text-green-600 transition">
@@ -93,11 +88,11 @@
 
     <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
-    <div id="tab-content" class="bg-white p-6 rounded shadow w-full relative">
+    <div id="tab-content" class="bg-white p-4 md:p-6 rounded shadow w-full relative">
 
         <div id="general-info" class="tab-pane">
-            <div class="flex items-stretch gap-6">
-                <form id="athleteForm" method="POST" action="{{ route('athletes.store') }}" class="student-form flex items-stretch gap-6 w-full" autocomplete="off" enctype="multipart/form-data">
+            <div class="flex items-stretch gap-6 w-full">
+                <form id="athleteForm" method="POST" action="{{ route('athletes.store') }}" class="student-form flex flex-col lg:flex-row items-stretch gap-6 w-full" autocomplete="off" enctype="multipart/form-data">
                     @csrf
 
                     <input type="hidden" name="_method" id="_method" value="POST">
@@ -106,24 +101,36 @@
                     <!-- LEFT SIDE: Main Form -->
                     <div class="flex-1 gap-4 mb-6">
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <!-- ROW 1: Names -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="last_name" class="w-1/3 text-gray-700 font-medium">Last Name</label>
-                                <input type="text" id="last_name" name="last_name" placeholder="Enter last name"
+                                <input type="text" id="last_name" name="last_name" placeholder="Enter last name" required
                                     oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')"
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
 
                             <div class="flex items-center">
-                                <label for="first_name" class="w-1/3 text-gray-700 font-medium">First Name & MI</label>
-                                <input type="text" id="first_name" name="first_name" placeholder="Enter first name"
+                                <label for="first_name" class="w-1/3 text-gray-700 font-medium">First Name</label>
+                                <input type="text" id="first_name" name="first_name" placeholder="Enter first name" required
                                     oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')"
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
+                            
+                            <div class="flex items-center">
+                                <label for="middle_name" class="w-1/3 text-gray-700 font-medium">Middle Initial</label>
+                                <input type="text" id="middle_name" name="middle_name" placeholder="Enter middle initial" required
+                                    oninput="this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase()" maxlength="2"
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                            </div>
+                        </div>
+
+                        <!-- ROW 2: Identity & Birth -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex flex-col w-full">
                                 <div class="flex items-center">
                                     <label for="student_id" class="w-1/3 text-gray-700 font-medium">Student ID</label>
-                                    <input type="text" id="student_id" name="student_id" placeholder="XX-XXXX-XXX"
+                                    <input type="text" id="student_id" name="student_id" placeholder="XX-XXXX-XXX" required
                                         oninput="formatStudentID(this)" maxlength="11"
                                         class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 font-mono tracking-wider">
                                 </div>
@@ -133,58 +140,58 @@
                                     </span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            
                             <div class="flex items-center">
-                            <label class="w-1/3 text-gray-700 font-medium">Gender</label>
-                            <select id="gender" name="gender"
-                                class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
-                                <option value="">Select Gender</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Birthdate</label>
-                                <input type="date" id="birthdate" name="birthdate"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                <label class="w-1/3 text-gray-700 font-medium">Gender</label>
+                                <select id="gender" name="gender" required
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
                             </div>
 
                             <div class="flex items-center">
+                                <label class="w-1/3 text-gray-700 font-medium">Birthdate</label>
+                                <input type="date" id="birthdate" name="birthdate" required
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                            </div>
+                        </div>
+
+                        <!-- ROW 3: Background -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="flex items-center">
                                 <label class="w-1/3 text-gray-700 font-medium">Age</label>
-                                <input type="number" id="age" name="age" placeholder="Enter Age"
+                                <input type="number" id="age" name="age" placeholder="Enter Age" required
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
                                     min="15" max="35" title="Age must be a realistic number between 15 and 35."
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
-                        </div>
-
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            
                             <div class="flex items-center">
                                 <label class="w-1/3 text-gray-700 font-medium">Blood Type</label>
-                                <input type="text" id="blood_type" name="blood_type" placeholder="Enter Blood Type"
+                                <input type="text" id="blood_type" name="blood_type" placeholder="Enter Blood Type" required
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
 
                             <div class="flex items-center">
                                 <label class="w-1/3 text-gray-700 font-medium">Course</label>
-                                <input type="text" id="course" name="course" placeholder="Enter Course"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-                            </div>
-
-                            <div class="flex items-center">
-                                <label class="w-1/3 text-gray-700 font-medium">Year/Level</label>
-                                <input type="text" id="year_level" name="year_level" placeholder="Enter Year/Level"
+                                <input type="text" id="course" name="course" placeholder="Enter Course" required
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <!-- ROW 4: Academics & Socials -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="flex items-center">
+                                <label class="w-1/3 text-gray-700 font-medium">Year/Level</label>
+                                <input type="text" id="year_level" name="year_level" placeholder="Enter Year/Level" required
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                            </div>
+                            
                             <div class="flex items-center">
                                 <label for="email" class="w-1/3 text-gray-700 font-medium">Email Address</label>
-                                <input type="text" id="email" name="email" placeholder="Enter Email Address"
+                                <input type="text" id="email" name="email" placeholder="Enter Email Address" required
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
 
@@ -193,12 +200,15 @@
                                 <input type="text" id="facebook" name="facebook" placeholder="Enter Facebook Account Link"
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
+                        </div>
 
+                        <!-- ROW 5: Status & Contact -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="marital_status" class="w-1/3 text-gray-700 font-medium">Marital Status</label>
-                                <select id="marital_status" name="marital_status"
+                                <select id="marital_status" name="marital_status" required
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-green-600">
-                                    <option value="Select Marital Status">Select Marital Status</option>
+                                    <option value="">Select Marital Status</option>
                                     <option value="Single">Single</option>
                                     <option value="Married">Married</option>
                                     <option value="Widowed">Widowed</option>
@@ -206,41 +216,43 @@
                                     <option value="Separated">Separated</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="contact_number" class="w-1/3 text-gray-700 font-medium">Contact No.</label>
-                                <input type="text" id="contact_number" name="contact_number" placeholder="e.g., 09123456789"
+                                <input type="text" id="contact_number" name="contact_number" placeholder="e.g., 09123456789" required
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
                                     maxlength="11" minlength="11" pattern="^09[0-9]{9}$" 
                                     title="Contact number must start with 09 and be exactly 11 digits long."
                                     class="contact-number w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
-
-                            <div class="col-span-2 flex items-center">
-                                <label for="address" class="w-1/6 text-gray-700 font-medium">Address</label>
-                                <input type="text" id="address" name="address" placeholder="Enter Address"
-                                    class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                            
+                            <div class="flex items-center">
+                                <label for="city_municipality" class="w-1/3 text-gray-700 font-medium">City / Municipality</label>
+                                <input type="text" id="city_municipality" name="city_municipality" placeholder="Enter City/Municipality" required
+                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
-                            <div class="flex items-center">
-                                <label for="city_municipality" class="w-1/3 text-gray-700 font-medium">City / Municipality</label>
-                                <input type="text" id="city_municipality" name="city_municipality" placeholder="Enter City/Municipality"
-                                    class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <!-- ROW 6: Address & Province -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="col-span-1 md:col-span-2 flex items-center">
+                                <label for="address" class="w-1/6 text-gray-700 font-medium">Address</label>
+                                <input type="text" id="address" name="address" placeholder="Enter Address" required
+                                    class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
 
                             <div class="flex items-center">
                                 <label for="province_state" class="w-1/3 text-gray-700 font-medium">Province / State</label>
-                                <input type="text" id="province_state" name="province_state" placeholder="Enter Province/State"
+                                <input type="text" id="province_state" name="province_state" placeholder="Enter Province/State" required
                                     class="w-2/3 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
                             </div>
-
+                        </div>
+                        
+                        <!-- ROW 7: Zip Code -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="zip_code" class="w-1/3 text-gray-700 font-medium">Zip Code</label>
-                                <input type="text" id="zip_code" name="zip_code" placeholder="Enter Zip Code"
+                                <input type="text" id="zip_code" name="zip_code" placeholder="Enter Zip Code" required
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
                                     maxlength="4" minlength="4" pattern="^[0-9]{4}$" 
                                     title="Philippine ZIP codes must be exactly 4 digits."
@@ -250,12 +262,13 @@
 
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
-                        <div class="grid grid-cols-2 gap-4 mb-4">
+                        <!-- Emergency Contact Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div class="flex items-center gap-2">
                                 <label for="emergency_person" class="w-24 text-gray-700 font-medium">
                                     Emergency Contact Person
                                 </label>
-                                <input type="text" id="emergency_person" name="emergency_person"
+                                <input type="text" id="emergency_person" name="emergency_person" required
                                     placeholder="Enter Contact Person"
                                     oninput="this.value = this.value.replace(/[^a-zA-Z\s\-\.]/g, '')"
                                     class="flex-1 border border-gray-300 rounded px-3 py-2 
@@ -266,7 +279,7 @@
                                 <label for="emergency_contact" class="w-24 text-gray-700 font-medium">
                                     Contact No.
                                 </label>
-                                <input type="text" id="emergency_contact" name="emergency_contact"
+                                <input type="text" id="emergency_contact" name="emergency_contact" required
                                     placeholder="e.g., 09123456789"
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')" 
                                     maxlength="11" minlength="11" pattern="^09[0-9]{9}$" 
@@ -278,12 +291,14 @@
 
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <!-- Coach Info Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="mb-4">
                                 <label class="block text-gray-700 font-bold mb-2">Coach</label>
                                 <div id="coachDisplay" class="p-2 border rounded bg-gray-100 text-gray-700">
                                     @php
-                                        $currentCoach = $selectedAthlete->coach ?? optional(Auth::user())->coach;
+                                        // ✅ FIXED NULL SAFETY FOR COACH RELATIONSHIP
+                                        $currentCoach = $selectedAthlete?->coach ?? Auth::user()?->coach;
                                     @endphp
                                     {{ $currentCoach ? $currentCoach->coach_first_name . ' ' . $currentCoach->coach_last_name : 'No coach assigned' }}
                                 </div>
@@ -304,7 +319,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="asst_coach" class="w-1/3 text-gray-700 font-medium">Asst. Coach</label>
                                 <input type="text" id="asst_coach" name="asst_coach" placeholder="Enter Asst. Coach’s Name"
@@ -328,7 +343,8 @@
 
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <!-- Financials Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="tuition_fee" class="w-1/3 text-gray-700 font-medium">Tuition Fee</label>
                                 <input type="text" id="tuition_fee" name="tuition_fee" placeholder="Enter Tuition Fee"
@@ -351,7 +367,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div class="flex items-center">
                                 <label for="total_assessment" class="w-1/3 text-gray-700 font-medium">Total Assessment</label>
                                 <input type="text" id="total_assessment" name="total_assessment" placeholder="Enter Total Assessment"
@@ -377,8 +393,8 @@
                         <hr class="border-t-2 border-gray-400 my-2 w-[100%]">
 
                         <!-- Working Student Section -->
-                        <div class="grid grid-cols-2 gap-4 mb-4 bg-gray-50 p-4 rounded border border-gray-200 shadow-sm">
-                            <div class="col-span-2 mb-1 border-b pb-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-gray-50 p-4 rounded border border-gray-200 shadow-sm">
+                            <div class="col-span-1 md:col-span-2 mb-1 border-b pb-2">
                                 <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wider">
                                     <i class="bi bi-briefcase-fill me-1 text-green-700"></i> Working Student / Job Info (Trabaho Dati)
                                 </h3>
@@ -400,16 +416,17 @@
                     </div>
 
                     <!-- RIGHT SIDE WRAPPER -->
-                    <div class="w-[350px] flex-shrink-0 flex flex-col">
+                    <div class="w-full lg:w-[350px] flex-shrink-0 flex flex-col">
                         <div class="bg-gray-100 rounded-lg p-4 shadow-inner flex flex-col h-full">
                             <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">  
+                                <!-- ✅ FIXED NULL SAFETY FOR ATHLETE NAME -->
                                 <span id="selected_name" class="mt-2 text-gray-800 font-semibold text-center">
-                                    {{ $selectedAthlete->full_name ?? 'No athlete selected' }}
+                                    {{ $selectedAthlete?->full_name ?? 'No athlete selected' }}
                                 </span>
                             </div>
                             
                             <div class="flex flex-col items-center border border-dashed border-gray-400 rounded-lg p-3 bg-white mb-4">
-                                <div class="w-80 h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm relative overflow-hidden">
+                                <div class="w-full h-80 md:h-96 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 text-sm relative overflow-hidden">
                                     <img id="picturePreview" class="absolute inset-0 w-full h-full object-cover hidden" />
                                     <span id="noPictureText" class="text-gray-500 text-sm">No Picture</span>
                                 </div>
@@ -420,17 +437,17 @@
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Sports Event</label>
                                     <select name="sport_event" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
                                         <option value="">Select Sport...</option>
-                                        @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
-                                            <option value="{{ str_replace(' ', '_', $sport->name) }}">
+                                        <?php foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport): ?>
+                                            <option value="{{ $sport->name }}">
                                                 {{ $sport->name }}
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
 
                                 <div class="flex items-center mt-2">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Status</label>
-                                    <select name="status" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                    <select name="status" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
                                         <option value="">-- Select Status --</option>
                                         <option value="Active">Active</option>
                                         <option value="Inactive">Inactive</option>
@@ -441,7 +458,7 @@
 
                                 <div class="flex items-center mt-2">
                                     <label class="w-1/3 text-sm font-medium text-gray-700">Classification</label>
-                                    <select name="classification" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600">
+                                    <select name="classification" class="w-2/3 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-green-600" required>
                                         <option value="">-- Select Classification --</option>
                                         <option value="Regular">Regular</option>
                                         <option value="Class_A">Class A</option>
@@ -450,14 +467,14 @@
                                     </select>
                                 </div>
 
-                                <div class="flex justify-between mt-6">
+                                <div class="flex flex-col md:flex-row justify-between gap-4 mt-6">
                                     <input type="file" id="pictureInput" name="athlete_picture" accept="image/*" class="hidden">
                                     <button type="button" id="addPictureBtn"
-                                        class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
+                                        class="bg-green-700 text-white font-semibold rounded px-3 py-2 w-full flex items-center justify-center gap-1 hover:bg-green-800 transition">
                                         <i class="bi bi-person-plus"></i> Add Picture
                                     </button>
                                     <button type="button" id="clearPictureBtn"
-                                        class="bg-green-700 text-white font-semibold rounded px-3 py-1 flex items-center gap-1 hover:bg-green-800 transition">
+                                        class="bg-red-600 text-white font-semibold rounded px-3 py-2 w-full flex items-center justify-center gap-1 hover:bg-red-700 transition">
                                         <i class="bi bi-person-x"></i> Clear Picture
                                     </button>
                                 </div>
@@ -469,7 +486,7 @@
 
                                 <!-- PRINT BUTTON -->
                                 <button type="button" id="printBtn" onclick="printAthlete()" 
-                                    class="hidden w-full mt-6 bg-green-700 text-white font-bold rounded px-3 py-2 shadow hover:bg-green-800 transition flex justify-center items-center gap-2">
+                                    class="hidden w-full mt-6 bg-blue-600 text-white font-bold rounded px-3 py-2 shadow hover:bg-blue-700 transition flex justify-center items-center gap-2">
                                     🖨️ Print Athlete Record
                                 </button>
                             </div>
@@ -481,16 +498,16 @@
 
         <!-- Achievements Tab -->
         <div id="achievements" class="tab-pane hidden">
-            <div class="space-y-6">
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">🏅 Achievements</h1>
+            <div class="space-y-4 border rounded p-4 bg-white shadow-sm mt-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">🏅 Achievements</h1>
                     <button onclick="toggleAchievementModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
                         + Add Achievement
                     </button>
                 </div>
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table id="achievementsTable" class="min-w-full text-sm text-left">
+                <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                    <table id="achievementsTable" class="min-w-full text-sm text-left whitespace-nowrap">
                         <thead class="bg-green-600 text-white text-center">
                             <tr>
                                 <th class="px-6 py-3 font-medium">Year</th>
@@ -502,7 +519,7 @@
                                 <th class="px-6 py-3 font-medium">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="achievementsTableBody"></tbody>
+                        <tbody id="achievementsTableBody" class="bg-white"></tbody>
                     </table>
                 </div>
             </div>
@@ -510,25 +527,25 @@
 
         <!-- Academic Evaluation Tab -->
         <div id="academic-evolution" class="tab-pane hidden">
-            <div class="space-y-6">
-                <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Academic Evaluation</h1>
+            <div class="space-y-4 border rounded p-4 bg-white shadow-sm mt-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">Academic Evaluation</h1>
                     <button onclick="toggleAcademicModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
                         + Add Record
                     </button>
                 </div>
-                <div>
-                    <table class="w-full text-left">
+                <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                    <table class="min-w-full text-left whitespace-nowrap">
                         <thead class="bg-green-600 text-white text-center">
                             <tr>
-                                <th class="py-3">Units Passed</th>
-                                <th class="py-3">Units Enrolled</th>
-                                <th class="py-3">Percentage</th>
-                                <th class="py-3">Remarks</th>
+                                <th class="py-3 px-6">Units Passed</th>
+                                <th class="py-3 px-6">Units Enrolled</th>
+                                <th class="py-3 px-6">Percentage</th>
+                                <th class="py-3 px-6">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="gradesTable" class="text-gray-700"></tbody>
+                        <tbody id="gradesTable" class="text-gray-700 bg-white"></tbody>
                     </table>
                 </div>
             </div>
@@ -536,16 +553,16 @@
 
         <!-- Fees and Discounts Tab -->
         <div id="fees-discounts" class="tab-pane hidden">
-            <div class="bg-white rounded-lg shadow p-4">
-               <div class="bg-white p-6 shadow flex items-center justify-between">
-                    <h1 class="text-2xl font-bold text-gray-800">Fees and Discounts</h1>
+            <div class="space-y-4 border rounded p-4 bg-white shadow-sm mt-4">
+               <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">Fees and Discounts</h1>
                     <button onclick="toggleFeeModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow">
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
                         + Add Fee / Discount
                     </button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 text-sm text-gray-700">
+                <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                    <table class="min-w-full border border-gray-300 text-sm text-gray-700 whitespace-nowrap">
                         <thead class="bg-green-600 text-white text-center">
                             <tr>
                                 <th class="border border-gray-300 px-4 py-2">Academic Term and Year</th>
@@ -558,13 +575,13 @@
                                 <th class="border border-gray-300 px-4 py-2">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="fees-discounts-table-body"></tbody>
+                        <tbody id="fees-discounts-table-body" class="bg-white"></tbody>
                     </table>
                 </div>
             </div>
 
             <!-- FEE MODAL -->
-            <div id="feeModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div id="feeModal" class="hidden fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 p-4">
                 <div class="bg-[#2e4e1f] rounded-xl shadow-2xl w-full max-w-lg p-6 relative border-2 border-green-600">
                     <button type="button" onclick="toggleFeeModal(false)" class="absolute top-3 right-4 text-white hover:text-gray-300 text-2xl font-bold">✕</button>
                     <h2 class="text-2xl font-bold mb-6 text-center text-white border-b border-green-700 pb-2">Add Fee / Discount</h2>
@@ -629,16 +646,16 @@
 
         <!-- Work History Tab -->
         <div id="work-history" class="tab-pane hidden">
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="bg-white p-6 shadow flex items-center justify-between border-b-4 border-green-600">
-                    <h1 class="text-2xl font-bold text-gray-800"><i class="bi bi-person-workspace text-green-700 me-2"></i> Work History</h1>
+            <div class="space-y-4 border rounded p-4 bg-white shadow-sm mt-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-4">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800"><i class="bi bi-person-workspace text-green-700 me-2"></i> Work History</h1>
                     <button onclick="toggleWorkModal(true)"
-                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow font-semibold">
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 shadow w-full md:w-auto font-semibold">
                         + Add Work Record
                     </button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-gray-300 text-sm text-gray-700 mt-4">
+                <div class="overflow-x-auto w-full rounded-lg border border-gray-200">
+                    <table class="min-w-full border border-gray-300 text-sm text-gray-700 whitespace-nowrap">
                         <thead class="bg-gray-100 text-gray-700 text-center uppercase tracking-wider text-xs">
                             <tr>
                                 <th class="border px-4 py-3">Year / Term</th>
@@ -648,7 +665,7 @@
                                 <th class="border px-4 py-3">Status / Remarks</th>
                             </tr>
                         </thead>
-                        <tbody id="workTable" class="text-gray-700 text-center"></tbody>
+                        <tbody id="workTable" class="text-gray-700 text-center bg-white"></tbody>
                     </table>
                 </div>
             </div>
@@ -659,9 +676,9 @@
     <!-- PRINT PREVIEW MODAL -->
     <div id="printModal" class="hidden items-center justify-center p-4" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85); z-index: 999999 !important;">
         <div class="bg-gray-300 rounded-xl shadow-2xl flex flex-col relative overflow-hidden border-4 border-green-700" style="width: 100%; max-width: 1000px; height: 90vh;">
-            <div class="bg-green-700 text-white px-6 py-4 flex justify-between items-center z-10 shadow-md">
+            <div class="bg-green-700 text-white px-6 py-4 flex flex-col md:flex-row justify-between gap-4 items-center z-10 shadow-md">
                 <h2 class="text-xl font-bold tracking-wide">🖨️ Document Print Preview</h2>
-                <div class="space-x-3">
+                <div class="space-x-3 w-full md:w-auto flex justify-end">
                     <button onclick="triggerIframePrint()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded font-bold shadow transition border border-blue-400">
                         Print Document
                     </button>
@@ -678,7 +695,31 @@
     
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    
+
+    // --- AUTOMATIC AGE CALCULATION ---
+    const birthdateInput = document.getElementById('birthdate');
+    const ageInput = document.getElementById('age');
+
+    if (birthdateInput && ageInput) {
+        birthdateInput.addEventListener('change', function() {
+            if (this.value) {
+                const dob = new Date(this.value);
+                const today = new Date();
+                
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                
+                ageInput.value = age >= 0 ? age : ''; 
+            } else {
+                ageInput.value = ''; 
+            }
+        });
+    }
+            
     const byId = id => document.getElementById(id);
     const q = sel => document.querySelector(sel);
 
@@ -714,14 +755,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 🚀 NEW LOGIC: Dynamic Profile Hiding
     function setTabsForActive() {
         if(byId('tab-achievements')) byId('tab-achievements').style.display = 'block';
         if(byId('tab-academic-evaluation')) byId('tab-academic-evaluation').style.display = 'block';
         if(byId('tab-fees-discounts')) byId('tab-fees-discounts').style.display = 'block';
-        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'none'; // Hide Work History
+        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'none';
 
-        // Force user to general info tab if they were stuck on a hidden tab
         const workHistoryPane = byId('work-history');
         if(workHistoryPane && !workHistoryPane.classList.contains('hidden')) {
             const generalTab = document.querySelector('.tab-link[href="#general-info"]');
@@ -733,9 +772,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(byId('tab-achievements')) byId('tab-achievements').style.display = 'block';
         if(byId('tab-academic-evaluation')) byId('tab-academic-evaluation').style.display = 'none';
         if(byId('tab-fees-discounts')) byId('tab-fees-discounts').style.display = 'none';
-        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'block'; // Show Work History
+        if(byId('tab-work-history')) byId('tab-work-history').style.display = 'block';
 
-        // Force user to general info tab if they were stuck on a hidden tab
         const acadPane = byId('academic-evolution');
         const feesPane = byId('fees-discounts');
         if((acadPane && !acadPane.classList.contains('hidden')) || (feesPane && !feesPane.classList.contains('hidden'))) {
@@ -768,13 +806,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el.type !== 'hidden' && el.id !== 'search') el.disabled = true;
             });
         }
-        byId('addNewBtn')?.classList.remove('hidden');
         byId('saveBtn')?.classList.add('hidden');
         byId('editBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.add('hidden');
         byId('cancelBtn')?.classList.add('hidden');
         
-        setTabsForActive(); // Show default tabs when empty
+        setTabsForActive(); 
     }
 
     function unlockFormForNew() {
@@ -784,13 +821,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el.type !== 'hidden' && el.id !== 'search') el.disabled = false;
             });
         }
-        byId('addNewBtn')?.classList.add('hidden');
         byId('saveBtn')?.classList.remove('hidden');
         byId('editBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.add('hidden');
         byId('cancelBtn')?.classList.remove('hidden');
 
-        setTabsForActive(); // Only Work History is hidden for new athletes
+        setTabsForActive();
     }
 
     function lockFormForViewing() {
@@ -800,7 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el.type !== 'hidden' && el.id !== 'search') el.disabled = true;
             });
         }
-        byId('addNewBtn')?.classList.add('hidden');
         byId('saveBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.add('hidden');
         byId('editBtn')?.classList.remove('hidden');
@@ -814,7 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (el.type !== 'hidden' && el.id !== 'search') el.disabled = false;
             });
         }
-        byId('addNewBtn')?.classList.add('hidden');
         byId('editBtn')?.classList.add('hidden');
         byId('updateBtn')?.classList.remove('hidden');
         byId('cancelBtn')?.classList.remove('hidden');
@@ -827,6 +861,11 @@ document.addEventListener('DOMContentLoaded', () => {
             form.setAttribute('action', '{{ route('athletes.store') }}');
             if(byId('_method')) byId('_method').value = 'POST';
             if(byId('selected_athlete_id')) byId('selected_athlete_id').value = '';
+            
+            // Clear highlights
+            form.querySelectorAll('[required]').forEach(el => {
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+            });
         }
         if(byId('search')) byId('search').value = '';
         if(byId('selected_name')) byId('selected_name').textContent = 'No athlete selected';
@@ -841,12 +880,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.newAthleteData = { generalInfo: {}, achievements: [], academicRecords: [], fees: [], workHistory: [] };
         byId('printBtn')?.classList.add('hidden');
-        lockFormInitial(); // Will also reset the tabs
+        unlockFormForNew();
     };
 
-    lockFormInitial();
-
-    byId('addNewBtn')?.addEventListener('click', unlockFormForNew);
     byId('editBtn')?.addEventListener('click', unlockFormForEditing);
     
     byId('addPictureBtn')?.addEventListener('click', () => byId('pictureInput')?.click());
@@ -892,7 +928,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const classification = full.classification ? full.classification.toLowerCase() : '';
                 const isInactiveOrAlumni = status !== 'active' || classification === 'alumni' || classification === 'class_alumni';
 
-                // 🚀 Toggle Tabs dynamically based on data
                 if (isInactiveOrAlumni) {
                     setTabsForInactive();
                 } else {
@@ -979,7 +1014,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error("Error loading athlete:", err));
     };
 
-    // SEARCH LOGIC
     const searchInput = byId('search');
     const resultsBox = byId('searchResults');
     if (searchInput && resultsBox) {
@@ -1024,7 +1058,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const editId = urlParams.get('id');
-    if (editId) window.loadAthleteData(editId);
+    
+    if (editId) {
+        window.loadAthleteData(editId);
+    } else {
+        unlockFormForNew();
+    }
 
     window.toggleModal = (id, show) => { const m = byId(id); if(m) m.classList.toggle('hidden', !show); };
     window.toggleAchievementModal = (s) => toggleModal('AchievementModal', s);
@@ -1032,7 +1071,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.toggleFeeModal = (s) => toggleModal('feeModal', s);
     window.toggleWorkModal = (s) => toggleModal('workModal', s);
 
-    // FEE MODAL & CALCULATOR LOGIC
     const feeForm = document.getElementById('feeForm');
     if (feeForm) {
         feeForm.addEventListener('input', (e) => {
@@ -1098,8 +1136,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const workForm = byId('workForm');
     if(workForm) workForm.addEventListener('submit', e => { e.preventDefault(); const d = Object.fromEntries(new FormData(workForm).entries()); newAthleteData.workHistory.push(d); getWorkTbody().innerHTML += `<tr class="bg-white"><td class="border px-4 py-2">${d.year}</td><td class="border px-4 py-2">${d.date}</td><td class="border px-4 py-2">${d.position}</td><td class="border px-4 py-2">${d.company}</td><td class="border px-4 py-2">${d.remarks}</td></tr>`; workForm.reset(); toggleWorkModal(false); });
 
+    // --- MANDATORY FIELD VALIDATION HIGHLIGHTS ---
+    function validateRequiredFields() {
+        if (!generalForm) return true;
+        let isValid = true;
+        let firstInvalid = null;
+
+        generalForm.querySelectorAll('[required]').forEach(el => {
+            if (!el.value || !el.value.trim()) {
+                isValid = false;
+                el.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                if (!firstInvalid) firstInvalid = el;
+            } else {
+                el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+            }
+        });
+
+        if (!isValid) {
+            // The popup has been removed. Now it will just smoothly scroll to the first missing field.
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        return isValid;
+    }
+
+    // Clear highlights on input change
+    if (generalForm) {
+        generalForm.querySelectorAll('[required]').forEach(el => {
+            el.addEventListener('input', () => {
+                if (el.value && el.value.trim()) {
+                    el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
+            });
+            el.addEventListener('change', () => {
+                if (el.value && el.value.trim()) {
+                    el.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+                }
+            });
+        });
+    }
+
     function performFinalSave(e) {
         e.preventDefault();
+        if (!validateRequiredFields()) return;
+
         if (generalForm) {
             generalForm.querySelectorAll('input[name], select[name], textarea[name]').forEach(input => {
                 newAthleteData.generalInfo[input.name] = input.value;

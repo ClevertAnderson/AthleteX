@@ -21,7 +21,7 @@
 <body class="p-8 max-w-4xl mx-auto">
 
     <!-- OFFICIAL SHARED LETTERHEAD -->
-    <div class="flex justify-between items-end pb-2 border-b-2 border-black mb-6">
+    <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 items-end pb-2  -2 border-black mb-6">
         <div class="flex items-center">
             <!-- Official UC Logo (.png) -->
             <img src="{{ asset('images/UC_Official_Logo.png') }}" alt="University of the Cordilleras" class="h-14 object-contain" style="max-width: 300px;">
@@ -307,7 +307,7 @@
         </tr>
     </table>
 
-    <div class="flex justify-between border-t border-black mt-12 pt-2 text-[10px] text-gray-600 font-sans">
+    <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 border-t  lack mt-12 pt-2 text-[10px] text-gray-600 font-sans">
         <div>
             UC-ADM-SDO-FORM-{{ isset($athlete) ? 'AP' : 'CP' }}<br>
             August 17, 2023 Rev. 00

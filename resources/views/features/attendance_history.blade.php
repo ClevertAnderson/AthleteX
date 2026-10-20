@@ -7,7 +7,7 @@
     <div class="bg-white border-[12px] border-[#d1e9f0] p-1 shadow-sm">
 
         <!-- Header -->
-        <div class="bg-[#5bc0de] text-white px-4 py-2 flex justify-between items-center">
+        <div class="bg-[#5bc0de] text-white px-4 py-2 flex flex-col md:flex-row justify-between gap-4 items-center">
             <a href="{{ $backRoute }}" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition flex items-center gap-1">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
@@ -17,9 +17,8 @@
             <div></div>
         </div>
 
-        <!-- Month & Year Filter (Auto-Submitting) -->
+        <!-- Filters -->
         <form method="GET" action="{{ route('attendance.history') }}" class="p-4 flex flex-wrap gap-4 items-center border-b bg-gray-50 rounded-t-lg">
-            
             <div class="flex items-center gap-2">
                 <label class="font-bold text-sm text-gray-700">Month:</label>
                 <select name="month" onchange="this.form.submit()" class="border-gray-300 rounded px-3 py-1.5 shadow-sm focus:border-green-500 focus:ring-green-500 border">
@@ -42,7 +41,6 @@
                 </select>
             </div>
 
-            <!-- Sports filter (admin only) -->
             @if(auth()->user()->role === 'admin')
             <div class="flex items-center gap-2">
                 <label class="font-bold text-sm text-gray-700">Sport:</label>
@@ -57,16 +55,15 @@
             </div>
             @endif
 
-            <!-- Clear Button (Only shows if a filter is changed from defaults) -->
             @if(request()->has('sport_id') || request()->has('month') || request()->has('year'))
-            <a href="{{ route('attendance.history') }}" class="bg-gray-500 text-white px-3 py-1.5 rounded text-sm hover:bg-gray-600 transition shadow-sm">
-                Clear
+            <a href="{{ route('attendance.history') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm transition font-semibold shadow-sm">
+                Clear Filters
             </a>
             @endif
         </form>
 
         <!-- Color Key -->
-        <div class="flex gap-4 px-4 pb-2 text-[10px] font-bold uppercase">
+        <div class="flex gap-4 px-4 pb-2 text-[10px] font-bold uppercase mt-2">
             <span class="text-gray-600">Color Key:</span>
             <div class="flex items-center gap-1"><span class="w-4 h-4 bg-green-500"></span> Present</div>
             <div class="flex items-center gap-1"><span class="w-4 h-4 bg-yellow-400"></span> Late</div>
@@ -83,7 +80,6 @@
                         <th class="border p-2 sticky left-0 bg-[#d1e9f0] z-10 text-left w-36 min-w-[140px]">
                             Athlete
                         </th>
-
                         @for($day = 1; $day <= $daysInMonth; $day++)
                             <th class="border p-1 text-center w-8">
                                 {{ $day }}
@@ -91,16 +87,12 @@
                         @endfor
                     </tr>
                 </thead>
-
                 <tbody>
                     @forelse($athletes as $athlete)
                         <tr class="hover:bg-gray-50">
-                            <!-- Athlete Name -->
                             <td class="border p-2 sticky left-0 bg-white font-semibold w-36 min-w-[140px]">
                                 {{ $athlete->first_name }} {{ $athlete->last_name }}
                             </td>
-
-                            <!-- Daily Status -->
                             @for($day = 1; $day <= $daysInMonth; $day++)
                                 @php
                                     $date = \Carbon\Carbon::create($selectedYear, date('m', strtotime($selectedMonth)), $day)->format('Y-m-d');
@@ -114,7 +106,6 @@
                                         default => 'bg-gray-200'
                                     };
                                 @endphp
-
                                 <td class="border w-8 h-8 {{ $bgColor }}"></td>
                             @endfor
                         </tr>
@@ -128,6 +119,13 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 🚀 Pagination Links Footer -->
+        @if(method_exists($athletes, 'links'))
+            <div class="p-4 border-t bg-gray-50">
+                {{ $athletes->links() }}
+            </div>
+        @endif
 
     </div>
 </div>

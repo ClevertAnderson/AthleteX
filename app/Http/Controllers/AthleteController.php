@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Athlete;
+use App\Models\TryoutSchedule;
 use App\Services\BlockchainService;
 use App\Models\Achievement;
 use App\Models\AcademicEvaluation;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Sport;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class AthleteController extends Controller
 {
@@ -24,7 +26,7 @@ class AthleteController extends Controller
         $sports = \App\Models\Sport::all();
 
         if (auth()->user()->role === 'admin') {
-            
+
             $athleteQuery = Athlete::where('approval_status', 'approved')
                                    ->where('classification', '!=', 'Tryout');
 
@@ -37,14 +39,22 @@ class AthleteController extends Controller
                 }
             }
 
-            $athletes = $athleteQuery->get();
+            // Paginated Admin Athletes
+            $athletes = $athleteQuery->orderBy('last_name', 'asc')
+                                     ->orderBy('first_name', 'asc')
+                                     ->paginate(10, ['*'], 'athletes_page')
+                                     ->withQueryString();
 
+            // Paginated Admin Recruits
             $recruits = Athlete::where('status', 'Active')
-                               ->where('classification', 'Tryout') 
-                               ->get();
+                               ->where('classification', 'Tryout')
+                               ->orderBy('last_name', 'asc')
+                               ->orderBy('first_name', 'asc')
+                               ->paginate(10, ['*'], 'recruits_page')
+                               ->withQueryString();
 
         } elseif (auth()->user()->role === 'coach') {
-            
+
             $coachSport = auth()->user()->coach->coach_sport_event ?? null;
 
             if ($coachSport) {
@@ -52,7 +62,6 @@ class AthleteController extends Controller
                     ->where('approval_status', 'approved')
                     ->where('classification', '!=', 'Tryout');
 
-                // 🚀 ADDED: Coaches can now use the dashboard filters!
                 if ($request->filled('status')) {
                     if ($request->status === 'Alumni') {
                         $athleteQuery->where('classification', 'Alumni');
@@ -62,41 +71,102 @@ class AthleteController extends Controller
                     }
                 }
 
-                $athletes = $athleteQuery->get();
+                // Paginated Coach Athletes
+                $athletes = $athleteQuery->orderBy('last_name', 'asc')
+                                         ->orderBy('first_name', 'asc')
+                                         ->paginate(10, ['*'], 'athletes_page')
+                                         ->withQueryString();
 
+                // Paginated Coach Recruits
                 $recruits = Athlete::where('sport_event', $coachSport)
                     ->where('status', 'Active')
                     ->where('classification', 'Tryout')
-                    ->get();
+                    ->orderBy('last_name', 'asc')
+                    ->orderBy('first_name', 'asc')
+                    ->paginate(10, ['*'], 'recruits_page')
+                    ->withQueryString();
             } else {
-                $athletes = collect(); 
-                $recruits = collect(); 
+                $athletes = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+                $recruits = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
             }
 
         } else {
-            $athletes = collect(); 
-            $recruits = collect(); 
+            $athletes = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+            $recruits = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         }
-        
+
         return view('features.athlete_lists', compact('athletes', 'recruits', 'sports'));
     }
 
-    public function showApprovals()
+    public function showApprovals(Request $request)
     {
-        $tryoutPendings = Athlete::where('approval_status', 'pending')
-                            ->where('classification', 'Tryout')
-                            ->latest()->get();
+        $tryoutQuery = Athlete::where('approval_status', 'pending')
+                            ->where('classification', 'Tryout');
 
-        $studentRequests = Athlete::where('approval_status', 'pending')
-                            ->where(function($q) {
-                                $q->whereNotIn('classification', ['Tryout', 'Alumni'])
-                                  ->orWhereNull('classification');
-                            })
-                            ->latest()->get();
+        if ($request->filled('tryout_search')) {
+            $term = trim($request->tryout_search);
+            $tryoutQuery->where(function ($q) use ($term) {
+                $q->where('first_name', 'like', "%{$term}%")
+                  ->orWhere('last_name', 'like', "%{$term}%")
+                  ->orWhere('student_id', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
+        if ($request->filled('tryout_sport') && $request->tryout_sport !== 'ALL') {
+            $tryoutQuery->where('sport_event', $request->tryout_sport);
+        }
+        $tryoutPendings = $tryoutQuery->latest()
+                                     ->paginate(15, ['*'], 'tryout_page')
+                                     ->appends($request->all());
 
-        $alumniPendings = Athlete::where('approval_status', 'pending')
-                            ->where('classification', 'Alumni')
-                            ->latest()->get();
+        $schedules = TryoutSchedule::orderBy('tryout_date', 'desc')
+                                   ->paginate(10, ['*'], 'schedules_page');
+
+        $recruits = Athlete::where('classification', 'Tryout')
+                           ->where('approval_status', 'approved')
+                           ->latest('updated_at')
+                           ->paginate(10, ['*'], 'recruits_page');
+
+        $studentQuery = Athlete::where('approval_status', 'pending')
+                               ->where(function($q) {
+                                   $q->whereNotIn('classification', ['Tryout', 'Alumni'])
+                                     ->orWhereNull('classification');
+                               });
+
+        if ($request->filled('request_search')) {
+            $term = trim($request->request_search);
+            $studentQuery->where(function ($q) use ($term) {
+                $q->where('first_name', 'like', "%{$term}%")
+                  ->orWhere('last_name', 'like', "%{$term}%")
+                  ->orWhere('student_id', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
+        if ($request->filled('request_sport') && $request->request_sport !== 'ALL') {
+            $studentQuery->where('sport_event', $request->request_sport);
+        }
+        $studentRequests = $studentQuery->latest()
+                                        ->paginate(15, ['*'], 'request_page')
+                                        ->appends($request->all());
+
+        $alumniQuery = Athlete::where('approval_status', 'pending')
+                            ->where('classification', 'Alumni');
+
+        if ($request->filled('alumni_search')) {
+            $term = trim($request->alumni_search);
+            $alumniQuery->where(function ($q) use ($term) {
+                $q->where('first_name', 'like', "%{$term}%")
+                  ->orWhere('last_name', 'like', "%{$term}%")
+                  ->orWhere('student_id', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
+        if ($request->filled('alumni_sport') && $request->alumni_sport !== 'ALL') {
+            $alumniQuery->where('sport_event', $request->alumni_sport);
+        }
+        $alumniPendings = $alumniQuery->latest()
+                                    ->paginate(15, ['*'], 'alumni_page')
+                                    ->appends($request->all());
 
         $approvedAthletes = Athlete::where('status', 'Active')
                                    ->where('approval_status', 'approved')
@@ -104,16 +174,19 @@ class AthleteController extends Controller
                                    ->take(5)
                                    ->get();
 
-        $declinedAthletes = Athlete::where('status', 'Declined')
-                                   ->orderBy('updated_at', 'desc')
-                                   ->take(5)
+        // Recently rejected applications (kept on file together with the typed reason)
+        $declinedAthletes = Athlete::where('approval_status', 'rejected')
+                                   ->orderByDesc('updated_at')
+                                   ->take(10)
                                    ->get();
 
         return view('features.approvals', compact(
-            'tryoutPendings', 
+            'tryoutPendings',
+            'schedules',
+            'recruits',
             'studentRequests',
             'alumniPendings',
-            'approvedAthletes', 
+            'approvedAthletes',
             'declinedAthletes'
         ));
     }
@@ -121,25 +194,22 @@ class AthleteController extends Controller
     public function approve(Request $request, $id)
     {
         $athlete = Athlete::findOrFail($id);
-        
-        // 1. Calculate the final balance
+
         $totalAssessment = $request->input('total_assessment', 0);
         $totalDiscount = $request->input('total_discount', 0);
         $balance = $totalAssessment - $totalDiscount;
 
-        // 2. SMARTER COACH SEARCH: Strip underscores and "Men/Women" to ensure a match
-        $cleanSport = str_replace('_', ' ', $athlete->sport_event); // Fixes "Table_Tennis"
-        $baseSport = trim(str_replace([' Men', ' Women', " Men's", " Women's"], '', $cleanSport)); // Extracts "Baseball" from "Baseball Men"
+        $cleanSport = str_replace('_', ' ', $athlete->sport_event);
+        $baseSport = trim(str_replace([' Men', ' Women', " Men's", " Women's"], '', $cleanSport));
 
         $assignedCoach = \App\Models\Coach::where('coach_sport_event', 'LIKE', '%' . $baseSport . '%')->first();
         $coachId = $assignedCoach ? $assignedCoach->id : $athlete->coach_id;
 
-        // 3. Update Athlete Profile
         $athlete->update([
             'status' => 'Active',
             'approval_status' => 'approved',
             'classification' => $request->input('classification', $athlete->classification),
-            'coach_id' => $coachId, // Automatically links the correct coach!
+            'coach_id' => $coachId,
             'tuition_fee' => $request->input('tuition_fee'),
             'misc_fee' => $request->input('miscellaneous_fee'),
             'other_charges' => $request->input('other_charges'),
@@ -148,7 +218,6 @@ class AthleteController extends Controller
             'balance' => $balance
         ]);
 
-        // 4. Create history record
         if ($request->filled('academic_year')) {
             \App\Models\FeesDiscount::create([
                 'athlete_id' => $athlete->id,
@@ -163,7 +232,6 @@ class AthleteController extends Controller
             ]);
         }
 
-        // 🚀 BLOCKCHAIN LOGGING
         BlockchainService::logAction('Approved Athlete Application: ' . $athlete->first_name . ' ' . $athlete->last_name, $athlete->toArray());
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -173,28 +241,22 @@ class AthleteController extends Controller
         return redirect()->back()->with('success', 'Athlete approved and scholarship fees successfully saved.');
     }
 
+    /**
+     * Decline an athlete / student request / tryout applicant.
+     * A typed reason is REQUIRED. The record is kept (status "Declined",
+     * approval_status "rejected") so the reason is not lost.
+     */
     public function decline(Request $request, $id)
     {
-        $athlete = Athlete::findOrFail($id);
-        
-        $athleteData = $athlete->toArray(); 
-        $athlete->delete();
-
-        BlockchainService::logAction('Declined & Deleted Athlete Application: ' . $athleteData['first_name'] . ' ' . $athleteData['last_name'], $athleteData);
-
-        if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Rejected and deleted!']);
-        }
-
-        return redirect()->back()->with('success', 'Athlete application has been rejected and deleted.');
+        return $this->rejectApplication($request, $id, 'Declined Athlete Application');
     }
 
     public function approveAlumni(Request $request, $id)
     {
         $athlete = Athlete::findOrFail($id);
-        
+
         $athlete->update([
-            'status' => 'Graduated', 
+            'status' => 'Graduated',
             'approval_status' => 'approved',
         ]);
 
@@ -203,15 +265,62 @@ class AthleteController extends Controller
         return redirect()->back()->with('success', 'Alumni record successfully verified and added to the master roster!');
     }
 
+    /**
+     * Reject an alumni submission. A typed reason is REQUIRED (same flow as decline()).
+     */
     public function rejectAlumni(Request $request, $id)
     {
+        return $this->rejectApplication($request, $id, 'Rejected Alumni Submission');
+    }
+
+    /**
+     * Shared rejection logic: validate the reason, mark the record as rejected,
+     * write it to the Security Ledger and answer (JSON for the modal, redirect otherwise).
+     */
+    private function rejectApplication(Request $request, $id, string $ledgerLabel)
+    {
+        $validated = $request->validate(
+            ['rejection_reason' => ['required', 'string', 'min:5', 'max:1000']],
+            [
+                'rejection_reason.required' => 'Please type the reason for rejecting this application.',
+                'rejection_reason.min'      => 'The reason must be at least 5 characters.',
+                'rejection_reason.max'      => 'The reason may not be longer than 1000 characters.',
+            ]
+        );
+
         $athlete = Athlete::findOrFail($id);
-        $athleteData = $athlete->toArray(); 
-        $athlete->delete();
+        $reason  = trim($validated['rejection_reason']);
 
-        BlockchainService::logAction('Rejected Alumni Submission: ' . $athleteData['first_name'] . ' ' . $athleteData['last_name'], $athleteData);
+        $athlete->update([
+            'approval_status'  => 'rejected',
+            'status'           => 'Declined',
+            'rejection_reason' => $reason,
+            'rejected_by'      => auth()->id(),
+        ]);
 
-        return redirect()->back()->with('success', 'Alumni submission was rejected and deleted.');
+        $fullName = trim($athlete->first_name . ' ' . $athlete->last_name);
+
+        BlockchainService::logAction(
+            $ledgerLabel . ': ' . $fullName . ' | Reason: ' . $reason,
+            $athlete->fresh()->toArray()
+        );
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Application rejected.',
+                'rejected' => [
+                    'name'   => $athlete->last_name . ', ' . $athlete->first_name,
+                    'type'   => $athlete->classification === 'Tryout' ? 'Tryout'
+                                : ($athlete->classification === 'Alumni' ? 'Alumni' : 'Student'),
+                    'sport'  => str_replace('_', ' ', (string) $athlete->sport_event),
+                    'reason' => $reason,
+                    'date'   => now()->format('M d, Y'),
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Application rejected. The reason was saved.');
     }
 
     public function showPending()
@@ -222,7 +331,25 @@ class AthleteController extends Controller
     public function create()
     {
         $sports = Sport::all();
-        return view('features.student_athlete', compact('sports'));
+        
+        // ✅ FIX: Explicitly passing null to prevent Blade errors on initial load
+        return view('features.student_athlete', [
+            'sports' => $sports,
+            'selectedAthlete' => null
+        ]);
+    }
+
+    /**
+     * Student ID must be unique, but REJECTED applications don't count
+     * (so a corrected application can be re-submitted).
+     */
+    private function studentIdUniqueRule($ignoreId = null)
+    {
+        $rule = Rule::unique('athletes', 'student_id')->where(function ($q) {
+            $q->whereNull('approval_status')->orWhere('approval_status', '!=', 'rejected');
+        });
+
+        return $ignoreId ? $rule->ignore($ignoreId) : $rule;
     }
 
     public function store(Request $request)
@@ -238,7 +365,7 @@ class AthleteController extends Controller
                 'string',
                 'max:255',
                 'regex:/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/',
-                'unique:athletes,student_id'
+                $this->studentIdUniqueRule()
             ],
             'first_name'        => 'required|string|max:255|regex:/^[a-zA-Z\s\-\.]+$/',
             'last_name'         => 'required|string|max:255|regex:/^[a-zA-Z\s\-\.]+$/',
@@ -260,16 +387,16 @@ class AthleteController extends Controller
         ];
 
         $messages = [
-            'student_id.unique'       => 'This Student ID is already registered.',
+            'student_id.unique'        => 'This Student ID is already registered.',
             'student_id.regex' => 'The Student ID must follow the exact format XX-XXXX-XXX (e.g., 20-3847-666).',
             'first_name.regex'        => 'First Name cannot contain numbers or special characters.',
-            'last_name.regex'         => 'Last Name cannot contain numbers or special characters.',
-            'birthdate.before'        => 'The birthdate must be a valid date in the past.',
-            'email.email'             => 'Please provide a valid email format.',
-            'contact_number.regex'    => 'Contact Number must start with 09 and be exactly 11 digits.',
+            'last_name.regex'          => 'Last Name cannot contain numbers or special characters.',
+            'birthdate.before'         => 'The birthdate must be a valid date in the past.',
+            'email.email'              => 'Please provide a valid email format.',
+            'contact_number.regex'     => 'Contact Number must start with 09 and be exactly 11 digits.',
             'emergency_contact.regex' => 'Emergency Contact must start with 09 and be exactly 11 digits.',
-            'zip_code.digits'         => 'ZIP code must be exactly 4 digits.',
-            'age.between'             => 'Age must be a realistic number between 15 and 35.',
+            'zip_code.digits'          => 'ZIP code must be exactly 4 digits.',
+            'age.between'              => 'Age must be a realistic number between 15 and 35.',
         ];
 
         $validator = Validator::make($general, $rules, $messages);
@@ -300,8 +427,8 @@ class AthleteController extends Controller
         }
 
         if (isset($general['province_state'])) {
-            $data['province_state'] = $general['province_state']; 
-            $data['province'] = $general['province_state']; 
+            $data['province_state'] = $general['province_state'];
+            $data['province'] = $general['province_state'];
         } elseif (isset($general['province'])) {
             $data['province_state'] = $general['province'];
             $data['province'] = $general['province'];
@@ -310,7 +437,7 @@ class AthleteController extends Controller
         if (auth()->check()) {
             if (auth()->user()->role === 'coach') {
                 $data['coach_id'] = auth()->user()->coach->id ?? auth()->user()->coach_id ?? null;
-                $data['status'] = 'Pending'; 
+                $data['status'] = 'Pending';
                 $data['approval_status'] = 'pending';
             } elseif (auth()->user()->role === 'admin') {
                 $data['status'] = isset($general['status']) && $general['status'] !== '' ? $general['status'] : 'Active';
@@ -391,7 +518,7 @@ class AthleteController extends Controller
 
         } catch (\Throwable $e) {
             Log::error('Athlete store error: ' . $e->getMessage(), ['exception' => $e]);
-            
+
             if ($request->expectsJson() || $request->wantsJson() || $request->isJson()) {
                 return response()->json(['success' => false, 'message' => 'Failed to create athlete', 'error' => $e->getMessage()], 500);
             }
@@ -409,7 +536,7 @@ class AthleteController extends Controller
             if ($coachSport) {
                 $query->where('sport_event', $coachSport);
             } else {
-                $query->whereNull('id'); 
+                $query->whereNull('id');
             }
         }
 
@@ -487,14 +614,14 @@ class AthleteController extends Controller
         $general = is_array($payload) && array_key_exists('generalInfo', $payload) && is_array($payload['generalInfo'])
             ? $payload['generalInfo']
             : $payload;
-            
+
         $rules = [
           'student_id' => [
                 'required',
                 'string',
                 'max:255',
                 'regex:/^[0-9]{2}-[0-9]{4}-[0-9]{3}$/',
-                'unique:athletes,student_id,' . $athlete->id
+                $this->studentIdUniqueRule($athlete->id)
             ],
             'first_name'        => 'required|string|max:255|regex:/^[a-zA-Z\s\-\.]+$/',
             'last_name'         => 'required|string|max:255|regex:/^[a-zA-Z\s\-\.]+$/',
@@ -507,16 +634,16 @@ class AthleteController extends Controller
         ];
 
         $messages = [
-            'student_id.unique'       => 'This Student ID is already registered.',
+            'student_id.unique'        => 'This Student ID is already registered.',
             'student_id.regex' => 'The Student ID must follow the exact format XX-XXXX-XXX (e.g., 20-3847-666).',
             'first_name.regex'        => 'First Name cannot contain numbers or special characters.',
-            'last_name.regex'         => 'Last Name cannot contain numbers or special characters.',
-            'birthdate.before'        => 'The birthdate must be a valid date in the past.',
-            'email.email'             => 'Please provide a valid email format.',
-            'contact_number.regex'    => 'Contact Number must start with 09 and be exactly 11 digits.',
+            'last_name.regex'          => 'Last Name cannot contain numbers or special characters.',
+            'birthdate.before'         => 'The birthdate must be a valid date in the past.',
+            'email.email'              => 'Please provide a valid email format.',
+            'contact_number.regex'     => 'Contact Number must start with 09 and be exactly 11 digits.',
             'emergency_contact.regex' => 'Emergency Contact must start with 09 and be exactly 11 digits.',
-            'zip_code.digits'         => 'ZIP code must be exactly 4 digits.',
-            'age.between'             => 'Age must be a realistic number between 15 and 35.',
+            'zip_code.digits'          => 'ZIP code must be exactly 4 digits.',
+            'age.between'              => 'Age must be a realistic number between 15 and 35.',
         ];
 
         $validator = Validator::make($general, $rules, $messages);
@@ -527,7 +654,7 @@ class AthleteController extends Controller
             }
             return back()->withErrors($validator)->withInput();
         }
-            
+
         $data = [];
         $fields = [
             'student_id', 'first_name', 'last_name', 'course', 'year_level', 'sport',
@@ -545,16 +672,16 @@ class AthleteController extends Controller
                 $data[$f] = $general[$f];
             }
         }
-        
+
         if (isset($general['province_state'])) {
-            $data['province_state'] = $general['province_state']; 
-            $data['province'] = $general['province_state']; 
+            $data['province_state'] = $general['province_state'];
+            $data['province'] = $general['province_state'];
         }
 
         if (auth()->check()) {
             if (auth()->user()->role === 'coach') {
                 $data['coach_id'] = auth()->user()->coach->id ?? auth()->user()->coach_id ?? null;
-                $data['status'] = 'Pending'; 
+                $data['status'] = 'Pending';
                 $data['approval_status'] = 'pending';
             } elseif (auth()->user()->role === 'admin') {
                 $data['status'] = isset($general['status']) && $general['status'] !== '' ? $general['status'] : 'Active';
@@ -573,7 +700,7 @@ class AthleteController extends Controller
                 }
             });
 
-            $athlete->refresh(); 
+            $athlete->refresh();
             BlockchainService::logAction('Updated Athlete Profile: ' . $athlete->first_name . ' ' . $athlete->last_name, $athlete->toArray());
 
             if ($request->expectsJson()) {
@@ -602,8 +729,8 @@ class AthleteController extends Controller
             ],
             'first_name'     => 'required|string|max:255',
             'last_name'      => 'required|string|max:255',
-            'email'          => ['required', 'string', 'email', 'max:255', 'regex:/^[\w\-\.]+@([\w\-]+\.)+[a-zA-Z]{2,7}$/'], 
-            'contact_number' => ['required', 'regex:/^09[0-9]{9}$/'], 
+            'email'          => ['required', 'string', 'email', 'max:255', 'regex:/^[\w\-\.]+@([\w\-]+\.)+[a-zA-Z]{2,7}$/'],
+            'contact_number' => ['required', 'regex:/^09[0-9]{9}$/'],
             'sport_event'    => 'required|string',
             'course'         => 'nullable|string|max:255',
             'year_graduated'  => 'nullable|integer',
@@ -618,18 +745,31 @@ class AthleteController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
+        // 🔒 ALUMNI DUPLICATION PREVENTION:
+        // cross-reference the submission against the existing records
+        // (inactive / graduated / alumni / pending) BEFORE anything is saved.
+        if ($validated['classification'] === 'Alumni') {
+            [$existing, $matchedById] = $this->findExistingAlumniProfile($validated);
+
+            if ($existing) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['student_id' => $this->duplicateAlumniMessage($existing, $matchedById)]);
+            }
+        }
+
         try {
             $athlete = \App\Models\Athlete::create([
-                'student_id' => $request->input('student_id'), 
+                'student_id' => $request->input('student_id'),
                 'first_name' => $validated['first_name'],
                 'middle_initial' => $request->input('middle_initial'),
                 'last_name' => $validated['last_name'],
                 'email' => $validated['email'],
                 'sport_event' => $validated['sport_event'],
-                'status' => 'Pending', 
-                'approval_status' => 'pending', 
+                'status' => 'Pending',
+                'approval_status' => 'pending',
                 'classification' => $validated['classification'],
-                'picture_path' => null, 
+                'picture_path' => null,
                 'course' => $request->input('course'),
                 'year_level' => $request->input('year_level'),
                 'contact_number' => $request->input('contact_number'),
@@ -660,6 +800,66 @@ class AthleteController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error saving registration: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Looks for an existing profile that the incoming alumni submission would duplicate.
+     * Rejected applications never count. Returns [Athlete|null, matchedByStudentId(bool)].
+     *
+     *  1. Same Student ID (ignoring old tryout-only records)
+     *  2. Same first + last name AND same sport, among inactive / graduated / alumni records
+     */
+    private function findExistingAlumniProfile(array $v): array
+    {
+        $notRejected = function ($q) {
+            $q->whereNull('approval_status')->orWhere('approval_status', '!=', 'rejected');
+        };
+
+        // 1. Student ID match
+        if (!empty($v['student_id'])) {
+            $byId = Athlete::where($notRejected)
+                ->where('student_id', $v['student_id'])
+                ->where(function ($q) {
+                    $q->whereNull('classification')->orWhere('classification', '!=', 'Tryout');
+                })
+                ->first();
+
+            if ($byId) {
+                return [$byId, true];
+            }
+        }
+
+        // 2. Name + sport match against the inactive / alumni database
+        $first = mb_strtolower(trim($v['first_name']));
+        $last  = mb_strtolower(trim($v['last_name']));
+        $sport = str_replace('_', ' ', $v['sport_event']);
+
+        $byName = Athlete::where($notRejected)
+            ->whereRaw('LOWER(TRIM(first_name)) = ?', [$first])
+            ->whereRaw('LOWER(TRIM(last_name)) = ?', [$last])
+            ->whereRaw("REPLACE(sport_event, '_', ' ') = ?", [$sport])
+            ->where(function ($q) {
+                $q->whereIn('status', ['Inactive', 'Graduated'])
+                  ->orWhere('classification', 'Alumni');
+            })
+            ->first();
+
+        return [$byName, false];
+    }
+
+    private function duplicateAlumniMessage(Athlete $existing, bool $matchedById): string
+    {
+        $subject = $matchedById ? 'This Student ID' : 'A profile with the same name and sport';
+
+        if ($existing->classification === 'Alumni' && $existing->approval_status === 'approved') {
+            $detail = 'is already in the alumni records';
+        } elseif ($existing->classification === 'Alumni') {
+            $detail = 'has already been submitted and is waiting for SDO verification';
+        } else {
+            $detail = 'already has a profile in the SDO records (status: ' . ($existing->status ?: 'on file') . ')';
+        }
+
+        return "{$subject} {$detail}. To avoid duplicate profiles, please contact the Sports Development Office if your details need updating.";
     }
 
     public function printProfile($id)

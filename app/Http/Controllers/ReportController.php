@@ -10,32 +10,33 @@ use Illuminate\Support\Facades\Log;
 
 class ReportController extends Controller
 {
-    // Coach views their own reports
-   public function coachIndex()
+    public function coachIndex()
     {
-        if (auth()->user()->role !== 'coach') {
-            abort(403);
-        }
+        $user = auth()->user();
+        $coachId = $user->coach->id ?? $user->coach_id ?? null;
 
-        $coachId = auth()->user()->coach->id ?? null;
-        
-        // 1. Fetch standard file reports
-        $reports = \App\Models\Report::where('coach_id', $coachId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // 1. Get standard file upload reports
+        $reports = \App\Models\Report::where('coach_id', $coachId)->get();
 
-        // 2. Fetch the athletes for the new Medical Incident dropdown
-        $athletes = \Illuminate\Support\Facades\DB::table('athletes')->get();
+        // 2. Get active athletes assigned to this coach for the dropdown
+        $athletes = \App\Models\Athlete::where('coach_id', $coachId)
+                                     ->where('status', 'Active')
+                                     ->orderBy('last_name')
+                                     ->get();
 
-        // 3. NEW: Fetch this coach's medical incidents! (Joining athletes to get their names)
-        $incidentReports = \Illuminate\Support\Facades\DB::table('incident_reports')
-            ->join('athletes', 'incident_reports.athlete_id', '=', 'athletes.id')
-            ->where('incident_reports.coach_id', $coachId)
-            ->select('incident_reports.*', 'athletes.first_name', 'athletes.last_name')
-            ->orderBy('incident_reports.created_at', 'desc')
-            ->get();
+        // 3. Get the medical incident reports submitted by this coach
+        $incidentReports = \App\Models\IncidentReport::with('athlete')
+                                     ->where('coach_id', $coachId)
+                                     ->orderBy('created_at', 'desc')
+                                     ->get();
 
-        // Pass all three variables to the view
+        // Map the athlete name directly into the incident object for the Blade view
+        $incidentReports->map(function($incident) {
+            $incident->first_name = $incident->athlete->first_name ?? 'Unknown';
+            $incident->last_name = $incident->athlete->last_name ?? 'Athlete';
+            return $incident;
+        });
+
         return view('features.reports.coach_reports', compact('reports', 'athletes', 'incidentReports'));
     }
 

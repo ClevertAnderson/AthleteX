@@ -138,7 +138,7 @@
                             <input type="text" id="incident_type_specify" class="form-control border-danger hidden" placeholder="Describe specifics...">
                         </div>
                     </div>
-                    <div class="mt-4 flex justify-between">
+                    <div class="mt-4 flex flex-col md:flex-row justify-between gap-4">
                         <button type="button" onclick="prevStep(1)" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</button>
                         <button type="button" onclick="nextStep(3)" class="btn btn-danger">Next: Narrative <i class="bi bi-arrow-right ms-1"></i></button>
                     </div>
@@ -157,7 +157,7 @@
                             <textarea name="immediate_actions" class="form-control border-danger" rows="2" placeholder="e.g., Applied ice, notified campus security, sent to clinic" required></textarea>
                         </div>
                     </div>
-                    <div class="mt-4 flex justify-between">
+                    <div class="mt-4 flex flex-col md:flex-row justify-between gap-4">
                         <button type="button" onclick="prevStep(2)" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i> Back</button>
                         <button type="submit" class="btn btn-danger text-lg font-bold shadow-lg">
                             <i class="bi bi-send-exclamation me-1"></i> Submit Official Report
@@ -238,7 +238,7 @@
         <!-- 🚑 MEDICAL INCIDENTS HISTORY TABLE -->
         <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">My Medical Incident Reports</h3>
         <div class="bg-white rounded shadow p-6 overflow-x-auto mb-8 border-t-4 border-red-500">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 whitespace-nowrap">
                 <thead class="bg-red-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-red-800 uppercase tracking-wider">#</th>
@@ -296,7 +296,7 @@
         <!-- Standard Reports Table -->
         <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Standard File Uploads</h3>
         <div class="bg-white rounded shadow p-6 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 whitespace-nowrap">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
@@ -459,7 +459,7 @@
             <div class="modal-body p-10 bg-white" id="printArea{{ $incident->id }}">
                 
                 <!-- OFFICIAL LETTERHEAD (With Actual Logo) -->
-                <div class="flex justify-between items-end pb-2 border-b-2 border-black mb-4">
+                <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 items-end pb-2  -2 border-black mb-4">
                     <div class="flex items-center">
                         <!-- Official UC Logo (.png) -->
                         <img src="{{ asset('images/UC_Official_Logo.png') }}" alt="University of the Cordilleras" class="h-14 object-contain" style="max-width: 300px;">
@@ -557,7 +557,7 @@
                 </table>
 
                 <!-- Exact Footer text format from your original paper image -->
-                <div class="flex justify-between border-t border-black mt-8 pt-1 text-[10px] text-black font-sans">
+                <div class="flex flex-nowrap overflow-x-auto space-x-4 border-b border-gray-200 pb-2 flex-col md:flex-row justify-between gap-4 border-t  lack mt-8 pt-1 text-[10px] text-black font-sans">
                     <div>
                         UC-ADM-SDO-FORM-IR<br>
                         August 17, 2023 Rev. 00
@@ -583,6 +583,7 @@
                         <form action="/incidents/approve/{{ $incident->id }}" method="POST" class="m-0">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="status" value="SDO_Approved">
                             <button type="submit" class="btn btn-danger font-bold px-4 shadow">
                                 <i class="bi bi-check2-circle"></i> Approve & Generate Ticket
                             </button>

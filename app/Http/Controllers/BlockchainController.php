@@ -46,10 +46,37 @@ class BlockchainController extends Controller
         // 5. Send data to the dashboard
         return view('features.blockchain_dashboard', [
             'isSecure' => $verification['is_secure'],
+            // Flagged AND not yet resolved (these get the red status + Resolve button)
             'tamperedBlocks' => $verification['tampered_blocks'],
+            // Flagged but already reviewed by an admin: [block id => resolution (reason, who, when)]
+            'resolvedBlocks' => $verification['resolved_blocks'],
+            // Expected vs. found hash for every flagged block (shown in the Resolve window)
+            'blockDetails' => $verification['details'],
             'logs' => $logs,
             'totalBlocks' => $totalBlocks,
             'filteredCount' => $logs->count()
         ]);
+    }
+
+    /**
+     * Admin reviews a flagged block and resolves it (reason is required).
+     */
+    public function resolve(Request $request, $id)
+    {
+        $validated = $request->validate(
+            ['reason' => ['required', 'string', 'min:5', 'max:500']],
+            [
+                'reason.required' => 'Please type the reason for resolving this block.',
+                'reason.min'      => 'The reason must be at least 5 characters.',
+            ]
+        );
+
+        $resolution = BlockchainService::resolveBlock((int) $id, trim($validated['reason']));
+
+        if (! $resolution) {
+            return back()->with('error', 'Block #' . $id . ' is not currently flagged, so there is nothing to resolve.');
+        }
+
+        return back()->with('success', 'Block #' . $id . ' was reviewed and marked as resolved. The decision was recorded in the ledger.');
     }
 }

@@ -1,361 +1,400 @@
-@extends('layouts.app') 
+@extends('layouts.app') <!-- Adjust this to your main layout name, e.g., 'layouts.admin' -->
 
 @section('content')
-
-@include('partials.sidebar')
-
-<div class="bg-light min-vh-100 p-4">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
-        <h2 class="fw-bold text-success">
-            Tryouts Management
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-success mb-0" style="color: #2e4e1f !important;">
+            <i class="fas fa-calendar-alt me-2"></i>Tryout Schedules & Recruits
         </h2>
     </div>
 
+    <!-- Alert Messages (Success/Error) -->
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <ul class="nav nav-tabs mb-4" id="tryoutTabs" role="tablist">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs border-bottom-0 mb-3" id="tryoutTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold text-success border-bottom-0" id="schedules-tab" data-bs-toggle="tab" data-bs-target="#schedules" type="button" role="tab">
-                Tryout Schedules
+            <button class="nav-link active fw-bold text-success border-success border-bottom-0" style="color: #2e4e1f;" id="schedules-tab" data-bs-toggle="tab" data-bs-target="#schedules" type="button" role="tab" aria-controls="schedules" aria-selected="true">
+                <i class="fas fa-calendar-day me-2"></i>Schedules
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold text-secondary border-bottom-0 relative" id="recruits-tab" data-bs-toggle="tab" data-bs-target="#recruits" type="button" role="tab">
-                Passed Recruits
-                @if(isset($recruits) && $recruits->count() > 0)
-                    <span class="absolute top-0 right-0 -mt-1 -mr-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ $recruits->count() }}</span>
-                @endif
+            <button class="nav-link fw-bold text-secondary border-0" id="recruits-tab" data-bs-toggle="tab" data-bs-target="#recruits" type="button" role="tab" aria-controls="recruits" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Passed Recruits
             </button>
         </li>
     </ul>
 
     <div class="tab-content" id="tryoutTabsContent">
-
-        <div class="tab-pane fade show active" id="schedules" role="tabpanel">
+        <!-- ========================================== -->
+        <!-- 1. SCHEDULES PANE -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade show active" id="schedules" role="tabpanel" aria-labelledby="schedules-tab">
             <div class="row">
-                
-                <!-- ADD SCHEDULE FORM -->
-                <div class="col-md-4 mb-4">
+                <!-- Add Schedule Form -->
+                <div class="col-lg-4 mb-4">
                     <div class="card shadow-sm border-0 border-top border-success border-4">
-                        <div class="card-header bg-white py-3">
-                            <h5 class="mb-0 fw-bold text-secondary">Add New Schedule</h5>
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <h5 class="mb-0 fw-bold text-secondary">Post New Schedule</h5>
                         </div>
                         <div class="card-body">
                             <form action="{{ route('admin.tryouts.store') }}" method="POST">
                                 @csrf
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-secondary">Sport Event <span class="text-danger">*</span></label>
-                                    <select name="sport_event" class="form-select" required>
-                                        <option value="">Select Sport...</option>
-                                        @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
-                                            <option value="{{ str_replace(' ', '_', $sport->name) }}">
-                                                {{ $sport->name }}
-                                            </option>
-                                        @endforeach
+                                    <label for="sport_event" class="form-label fw-bold text-muted small">Sport Event</label>
+                                    <select class="form-select" id="sport_event" name="sport_event" required>
+                                        <option value="" disabled selected>Select a Sport</option>
+                                        <option value="Basketball">Basketball</option>
+                                        <option value="Volleyball">Volleyball</option>
+                                        <option value="Football">Football</option>
+                                        <option value="Badminton">Badminton</option>
+                                        <option value="Table_Tennis">Table Tennis</option>
+                                        <option value="Athletics">Athletics</option>
+                                        <option value="Chess">Chess</option>
+                                        <option value="E_Sports">E-Sports</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-secondary">Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="tryout_date" class="form-control" min="{{ date('Y-m-d') }}" required>
+                                    <label for="tryout_date" class="form-label fw-bold text-muted small">Date</label>
+                                    <input type="date" class="form-control" id="tryout_date" name="tryout_date" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-secondary">Time <span class="text-danger">*</span></label>
-                                    <input type="time" name="tryout_time" class="form-control" required>
+                                    <label for="tryout_time" class="form-label fw-bold text-muted small">Time</label>
+                                    <input type="time" class="form-control" id="tryout_time" name="tryout_time" required>
                                 </div>
-                                
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-secondary">Venue <span class="text-danger">*</span></label>
-                                    <select name="venue" class="form-select" required>
-                                        <option value="">Select Venue...</option>
-                                        <option value="UC Main Gym">UC Main Gym</option>
-                                        <option value="UC Campo Libertad">UC Campo Libertad</option>
-                                        <option value="Athletic Bowl">Athletic Bowl</option>
-                                        <option value="Athletic Bowl Swimming Pool">Athletic Bowl Swimming Pool</option>
-                                        <option value="Melvin Jones">Melvin Jones</option>
-                                        <option value="Other">Other (Specify in Notes)</option>
+                                    <label for="venue" class="form-label fw-bold text-muted small">Venue</label>
+                                    <input type="text" class="form-control" id="venue" name="venue" placeholder="e.g. University Gym" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="status" class="form-label fw-bold text-muted small">Status</label>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="Active" selected>Active</option>
+                                        <option value="Completed">Completed</option>
                                     </select>
                                 </div>
-
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold text-secondary">Notes (Optional)</label>
-                                    <textarea name="notes" class="form-control" rows="2" placeholder="e.g. Bring own equipment or water"></textarea>
+                                    <label for="notes" class="form-label fw-bold text-muted small">Notes (Optional)</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any specific requirements..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-success w-100 fw-bold py-2">
-                                    Save Schedule
+                                <button type="submit" class="btn btn-success w-100 fw-bold" style="background-color: #2e4e1f; border-color: #2e4e1f;">
+                                    <i class="fas fa-paper-plane me-1"></i> Post Schedule
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
 
-                <!-- SCHEDULES LIST -->
-                <div class="col-md-8">
-                    <div class="card shadow-sm border-0">
+                <!-- Schedules List Table -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card shadow-sm border-0 border-top border-success border-4">
                         <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold text-secondary">Tryout Schedules List</h5>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0 w-100">
+                            <div class="table-responsive w-100 overflow-x-auto">
+                                <table class="table table-hover align-middle mb-0 w-100 text-nowrap">
                                     <thead class="bg-light text-secondary">
                                         <tr>
-                                            <th class="ps-4">Sport Event & Status</th>
+                                            <th class="ps-4">Sport / Status</th>
                                             <th>Date & Time</th>
                                             <th>Venue & Notes</th>
-                                            <th class="text-center" style="min-width: 180px;">Action</th>
+                                            <th class="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse($schedules as $schedule)
-                                            @php
-                                                $tryoutDateTime = \Carbon\Carbon::parse($schedule->tryout_date . ' ' . $schedule->tryout_time);
-                                                $isExpired = $tryoutDateTime->isPast();
-                                            @endphp
-
-                                            <tr class="{{ $isExpired ? 'bg-light opacity-75' : 'hover:bg-gray-50' }}">
-                                                <td class="ps-4 fw-bold {{ $isExpired ? 'text-secondary' : 'text-success' }}">
-                                                    {{ str_replace('_', ' ', $schedule->sport_event) }}
-                                                    <br>
-                                                    @if($isExpired)
-                                                        <span class="badge bg-secondary mt-1">Expired</span>
-                                                    @else
-                                                        <span class="badge bg-success mt-1">Active</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="fw-semibold {{ $isExpired ? 'text-secondary' : 'text-dark' }}">
-                                                        {{ \Carbon\Carbon::parse($schedule->tryout_date)->format('M d, Y') }}
-                                                    </span><br>
-                                                    <small class="text-muted">
-                                                        {{ \Carbon\Carbon::parse($schedule->tryout_time)->format('h:i A') }}
-                                                    </small>
-                                                </td>
-                                                <td>
-                                                    <span class="fw-semibold {{ $isExpired ? 'text-secondary' : 'text-dark' }}">{{ $schedule->venue }}</span><br>
-                                                    <small class="text-muted text-truncate d-inline-block" style="max-width: 150px;">
-                                                        {{ $schedule->notes ?? 'No notes' }}
-                                                    </small>
-                                                </td>
-                                                <td class="text-center">
-                                                    <div class="d-flex justify-content-center gap-2">
-                                                        <!-- VIEW DETAILS BUTTON -->
-                                                        <button type="button" class="btn btn-sm btn-info text-white fw-bold" data-bs-toggle="modal" data-bs-target="#viewScheduleModal{{ $schedule->id }}">
-                                                            View
+                                        @forelse($schedules ?? [] as $schedule)
+                                        <tr>
+                                            <td class="ps-4">
+                                                <span class="badge bg-success px-2 py-1 mb-1">{{ str_replace('_', ' ', $schedule->sport_event) }}</span><br>
+                                                @if($schedule->status == 'Active')
+                                                    <span class="badge bg-primary px-2 py-1 small">Active</span>
+                                                @else
+                                                    <span class="badge bg-secondary px-2 py-1 small">Completed</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold text-dark">{{ \Carbon\Carbon::parse($schedule->tryout_date)->format('M d, Y') }}</span><br>
+                                                <span class="text-muted small"><i class="fas fa-clock me-1"></i>{{ \Carbon\Carbon::parse($schedule->tryout_time)->format('h:i A') }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold text-dark">{{ $schedule->venue }}</span>
+                                                @if($schedule->notes)
+                                                    <br><span class="text-muted small text-wrap" style="max-width: 250px; display: inline-block;">{{ Str::limit($schedule->notes, 40) }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <form action="{{ route('admin.tryouts.destroy', $schedule->id) }}" method="POST" class="m-0" onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3" title="Delete Schedule">
+                                                            <i class="fas fa-trash me-1"></i> Delete
                                                         </button>
-
-                                                        @if(!$isExpired)
-                                                        <!-- EDIT BUTTON -->
-                                                        <button type="button" class="btn btn-sm btn-warning fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#editScheduleModal{{ $schedule->id }}">
-                                                            Edit
-                                                        </button>
-                                                        @endif
-
-                                                        <!-- DELETE BUTTON -->
-                                                        <form action="{{ route('admin.tryouts.destroy', $schedule->id) }}" method="POST" class="m-0 p-0">
-                                                            @csrf
-                                                            <button type="submit" class="btn btn-sm btn-danger fw-bold" onclick="return confirm('Are you sure you want to remove this schedule?')">
-                                                                Delete
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
                                         @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center py-5">
-                                                    <p class="text-muted fs-5 mb-0">No tryout schedules have been posted yet.</p>
-                                                </td>
-                                            </tr>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5 text-muted">
+                                                <i class="fas fa-calendar-times mb-3" style="font-size: 2.5rem;"></i><br>
+                                                <span class="fs-6">No tryout schedules have been posted yet.</span>
+                                            </td>
+                                        </tr>
                                         @endforelse
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            <!-- Pagination for Schedules -->
+                            @if(isset($schedules) &&$schedules->hasPages())
+                            <div class="p-3 border-top bg-white">
+                                {{ $schedules->links('pagination::bootstrap-5') }}
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
-            </div> 
-        </div> 
-
-        <!-- Passed Recruits Tab Content -->
-        <div class="tab-pane fade" id="recruits" role="tabpanel">
-            <div class="alert alert-info border-info mb-4 flex items-center">
-                <div>
-                    <strong>Action Required:</strong> These students passed their tryouts but are still classified as "Recruits." 
-                    Once they submit their paperwork, edit their profile and change their Classification to "Class A, B, or C" to move them to the Master Roster.
-                </div>
             </div>
+        </div>
 
-            <div class="bg-white rounded-xl shadow overflow-hidden border border-yellow-300">
-                <div class="overflow-x-auto">
-                    <table class="w-full table-auto text-sm whitespace-nowrap">
-                        <thead class="bg-yellow-500 text-gray-900 text-center">
-                            <tr>
-                                <th class="px-4 py-3 font-bold border-r border-yellow-600">Applicant Name</th>
-                                <th class="px-4 py-3 font-bold border-r border-yellow-600">Sport Tryout</th>
-                                <th class="px-4 py-3 font-bold border-r border-yellow-600">Contact Details</th>
-                                <th class="px-4 py-3 font-bold border-r border-yellow-600">Date Passed</th>
-                                <th class="px-4 py-3 font-bold">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-700">
-                            @if(isset($recruits) && $recruits->count() > 0)
-                                @foreach ($recruits as $recruit)
-                                    <tr class="hover:bg-yellow-50 border-b">
-                                        <td class="px-4 py-3 border-r font-bold text-gray-900">{{ $recruit->last_name }}, {{ $recruit->first_name }}</td>
-                                        <td class="px-4 py-3 border-r text-center"><span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-semibold">{{ str_replace('_', ' ', $recruit->sport_event) }}</span></td>
-                                        <td class="px-4 py-3 border-r text-center">
-                                            {{ $recruit->contact_number ?? 'No Phone' }} <br>
-                                            <span class="text-xs text-gray-500">{{ $recruit->email }}</span>
+        <!-- ========================================== -->
+        <!-- 2. PASSED RECRUITS PANE -->
+        <!-- ========================================== -->
+        <div class="tab-pane fade" id="recruits" role="tabpanel" aria-labelledby="recruits-tab">
+            <div class="card shadow-sm border-0 border-top border-success border-4 mb-5">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-secondary">Passed Recruits Overview</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if(!isset($recruits) \vert{}\vert{}$recruits->isEmpty())
+                        <div class="text-center py-5">
+                            <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
+                            <p class="text-muted fs-5">No recruits have passed tryouts recently.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive w-100 overflow-x-auto">
+                            <table class="table table-hover align-middle mb-0 w-100 text-nowrap">
+                                <thead class="bg-light text-secondary">
+                                    <tr>
+                                        <th class="ps-4">Athlete Name</th>
+                                        <th>Contact Info</th>
+                                        <th>Sport Event</th>
+                                        <th>Date Passed</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recruits as$recruit)
+                                    <tr>
+                                        <td class="ps-4 fw-bold text-dark">{{ $recruit->last_name }}, {{ $recruit->first_name }} {{$recruit->middle_initial }}</td>
+                                        <td>
+                                            <span class="text-dark small"><i class="fas fa-envelope me-1"></i> {{ $recruit->email }}</span><br>
+                                            <span class="text-muted small"><i class="fas fa-phone me-1"></i> {{ $recruit->contact_number ?? 'N/A' }}</span>
                                         </td>
-                                        <td class="px-4 py-3 border-r text-center text-gray-500">{{ $recruit->updated_at->format('M d, Y') }}</td>
-                                        <td class="px-4 py-3 text-center">
-                                            <a href="{{ route('student.athlete', ['id' => $recruit->id]) }}" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded text-xs font-bold transition">
-                                                Update to Official Athlete
-                                            </a>
+                                        <td><span class="badge bg-success px-3 py-2">{{ str_replace('_', ' ', $recruit->sport_event) }}</span></td>
+                                        <td class="text-secondary small">{{ $recruit->updated_at->format('M d, Y') }}</td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-info btn-sm px-3 text-white" data-bs-toggle="modal" data-bs-target="#athleteProfileModal" data-id="{{ $recruit->id }}" title="View Profile">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </button>
                                         </td>
                                     </tr>
-                                @endforeach
-                            @else
-                                <tr><td colspan="5" class="text-center py-8 text-gray-500 italic">No recruits waiting for paperwork.</td></tr>
-                            @endif
-                        </tbody>
-                    </table>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination for Recruits -->
+                        @if($recruits->hasPages())
+                        <div class="p-3 d-flex flex-column flex-md-row justify-content-between align-items-center border-top bg-white gap-2">
+                            <small class="text-muted">
+                                Showing {{ $recruits->firstItem() ?? 0 }} to {{ $recruits->lastItem() ?? 0 }} of {{$recruits->total() }} recruits
+                            </small>
+                            <div>
+                                {{ $recruits->links('pagination::bootstrap-5') }}
+                            </div>
+                        </div>
+                        @endif
+                    @endif
                 </div>
             </div>
-        </div> 
+        </div>
 
-    </div> 
-</div> 
+    </div>
+</div>
 
 <!-- ========================================== -->
-<!-- MODALS -->
+<!-- ATHLETE PROFILE MODAL -->
 <!-- ========================================== -->
-@foreach($schedules as $schedule)
-    <!-- VIEW MODAL -->
-    <div class="modal fade" id="viewScheduleModal{{ $schedule->id }}" tabindex="-1" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.6);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title fw-bold">Tryout Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="athleteProfileModal" tabindex="-1" aria-labelledby="athleteProfileModalLabel" aria-hidden="true" data-bs-backdrop="false" style="background-color: rgba(0, 0, 0, 0.6); z-index: 105000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header text-white" style="background-color: #2e4e1f;">
+                <h5 class="modal-title fw-bold" id="athleteProfileModalLabel">
+                    <i class="fas fa-user-circle me-2"></i> Athlete Profile Summary
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center py-5" id="modalLoading">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Retrieving profile...</p>
                 </div>
-                <div class="modal-body p-4">
-                    <h3 class="fw-bold text-center text-dark mb-4">{{ str_replace('_', ' ', $schedule->sport_event) }}</h3>
-                    
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="text-muted fw-bold">Date</span>
-                            <span class="fw-semibold">{{ \Carbon\Carbon::parse($schedule->tryout_date)->format('l, F d, Y') }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="text-muted fw-bold">Time</span>
-                            <span class="fw-semibold">{{ \Carbon\Carbon::parse($schedule->tryout_time)->format('h:i A') }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="text-muted fw-bold">Venue</span>
-                            <span class="fw-semibold">{{ $schedule->venue }}</span>
-                        </li>
-                    </ul>
-                    
-                    <div class="mt-4 p-3 bg-light rounded border border-warning">
-                        <h6 class="fw-bold text-warning-emphasis mb-2">Special Instructions / Notes</h6>
-                        <p class="mb-0 text-dark">{{ $schedule->notes ?? 'None provided.' }}</p>
+                <div id="modalContent" class="d-none">
+                    <div class="row">
+                        <!-- Left Side: Picture & Badges -->
+                        <div class="col-md-4 text-center border-end">
+                            <img id="modalPicture" src="" alt="Profile Picture" class="img-fluid rounded-circle mb-3 border shadow-sm" style="width: 150px; height: 150px; object-fit: cover; background-color: #f8f9fa;">
+                            <h4 id="modalName" class="fw-bold text-dark mb-1"></h4>
+                            <div class="mt-3">
+                                <span id="modalSport" class="badge bg-success px-3 py-2 mb-2 w-100 fs-6 shadow-sm"></span><br>
+                                <span id="modalClass" class="badge bg-secondary px-3 py-2 w-100"></span>
+                            </div>
+                        </div>
+                        <!-- Right Side: Details -->
+                        <div class="col-md-8 ps-md-4 mt-4 mt-md-0">
+                            <h6 class="fw-bold border-bottom pb-2 mb-3 text-success" style="color: #2e4e1f !important;">Personal Information</h6>
+                            <table class="table table-sm table-borderless align-middle">
+                                <tbody>
+                                    <tr><th class="text-muted w-25"><i class="fas fa-id-card me-2"></i>ID Number</th><td id="modalStudentId" class="fw-bold text-dark"></td></tr>
+                                    <tr><th class="text-muted"><i class="fas fa-envelope me-2"></i>Email</th><td id="modalEmail" class="text-dark"></td></tr>
+                                    <tr><th class="text-muted"><i class="fas fa-phone me-2"></i>Contact</th><td id="modalContact" class="text-dark"></td></tr>
+                                    <tr><th class="text-muted"><i class="fas fa-graduation-cap me-2"></i>Course & Yr</th><td id="modalCourse" class="text-dark"></td></tr>
+                                    <tr><th class="text-muted"><i class="fas fa-birthday-cake me-2"></i>Birthdate</th><td id="modalBirthdate" class="text-dark"></td></tr>
+                                    <tr><th class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Address</th><td id="modalAddress" class="text-dark"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Close</button>
-                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- EDIT MODAL -->
-    @php
-        $tryoutDateTime = \Carbon\Carbon::parse($schedule->tryout_date . ' ' . $schedule->tryout_time);
-        $isExpired = $tryoutDateTime->isPast();
-    @endphp
-
-    @if(!$isExpired)
-    <div class="modal fade" id="editScheduleModal{{ $schedule->id }}" tabindex="-1" data-bs-backdrop="false" style="background-color: rgba(0,0,0,0.6);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title fw-bold text-dark">Edit Schedule</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="{{ route('admin.tryouts.update', $schedule->id) }}" method="POST">
-                        @csrf
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-secondary">Sport Event <span class="text-danger">*</span></label>
-                            <select name="sport_event" class="form-select" required>
-                                @foreach(\App\Models\Sport::orderBy('name', 'asc')->get() as $sport)
-                                    @php
-                                        $formattedSport = str_replace(' ', '_', $sport->name);
-                                    @endphp
-                                    <option value="{{ $formattedSport }}" {{ $schedule->sport_event == $formattedSport ? 'selected' : '' }}>
-                                        {{ $sport->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-secondary">Date <span class="text-danger">*</span></label>
-                            <input type="date" name="tryout_date" class="form-control" value="{{ \Carbon\Carbon::parse($schedule->tryout_date)->format('Y-m-d') }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-secondary">Time <span class="text-danger">*</span></label>
-                            <input type="time" name="tryout_time" class="form-control" value="{{ \Carbon\Carbon::parse($schedule->tryout_time)->format('H:i') }}" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-secondary">Venue <span class="text-danger">*</span></label>
-                            <select name="venue" class="form-select" required>
-                                <option value="UC Main Gym" {{ $schedule->venue == 'UC Main Gym' ? 'selected' : '' }}>UC Main Gym</option>
-                                <option value="UC Campo Libertad" {{ $schedule->venue == 'UC Campo Libertad' ? 'selected' : '' }}>UC Campo Libertad</option>
-                                <option value="Athletic Bowl" {{ $schedule->venue == 'Athletic Bowl' ? 'selected' : '' }}>Athletic Bowl</option>
-                                <option value="Athletic Bowl Swimming Pool" {{ $schedule->venue == 'Athletic Bowl Swimming Pool' ? 'selected' : '' }}>Athletic Bowl Swimming Pool</option>
-                                <option value="Melvin Jones" {{ $schedule->venue == 'Melvin Jones' ? 'selected' : '' }}>Melvin Jones</option>
-                                <option value="Other" {{ $schedule->venue == 'Other' ? 'selected' : '' }}>Other</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold text-secondary">Notes</label>
-                            <textarea name="notes" class="form-control" rows="3">{{ $schedule->notes }}</textarea>
-                        </div>
-                        
-                        <div class="d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-warning fw-bold text-dark">Update Changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-@endforeach
-
+<!-- ========================================== -->
+<!-- SCRIPTS -->
+<!-- ========================================== -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        
+        // 1. Tab Styling Toggle Script (Highlights active tab in green)
         const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
         tabs.forEach(tab => {
             tab.addEventListener('shown.bs.tab', event => {
-                tabs.forEach(t => { t.classList.remove('text-success'); t.classList.add('text-secondary'); });
+                // Reset all tabs to default secondary color
+                tabs.forEach(t => { 
+                    t.style.color = ''; 
+                    t.classList.remove('text-success'); 
+                    t.classList.add('text-secondary'); 
+                });
+                // Highlight the active tab
                 event.target.classList.remove('text-secondary');
-                event.target.classList.add('text-success');
+                event.target.style.color = '#2e4e1f'; 
             });
         });
+
+        // 2. Fetch Logic for Athlete Profile Modal
+        const profileModalEl = document.getElementById('athleteProfileModal');
+        if (profileModalEl) {
+            profileModalEl.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const athleteId = button.getAttribute('data-id');
+                if (!athleteId) return;
+
+                const loadingEl = document.getElementById('modalLoading');
+                const contentEl = document.getElementById('modalContent');
+                
+                loadingEl.classList.remove('d-none');
+                contentEl.classList.add('d-none');
+
+                // Adjust this route to match your actual route for fetching user details.
+                fetch(`/admin/approvals/${athleteId}/view`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Backend returned ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    // Populate Name
+                    let mi = data.middle_initial ? ' ' + String(data.middle_initial) : '';
+                    document.getElementById('modalName').innerText = `${data.last_name || ''}, ${data.first_name || ''}${mi}`;
+                    
+                    // Populate Badges
+                    document.getElementById('modalSport').innerText = data.sport_event ? String(data.sport_event).replace(/_/g, ' ') : 'N/A';
+                    document.getElementById('modalClass').innerText = data.classification ? String(data.classification).replace(/_/g, ' ') : 'N/A';
+                    
+                    // Populate Details
+                    document.getElementById('modalStudentId').innerText = data.student_id || 'N/A';
+                    document.getElementById('modalEmail').innerText = data.email || 'N/A';
+                    document.getElementById('modalContact').innerText = data.contact_number || 'N/A';
+                    
+                    // Format Course & Year
+                    let courseText = data.course ? String(data.course).trim() : '';
+                    let yearText = data.year_level ? String(data.year_level).trim() : '';
+                    let courseYr = courseText;
+                    if (yearText) {
+                        courseYr += (/^year/i.test(yearText)) ? ` — ${yearText}` : ` — Year ${yearText}`;
+                    }
+                    document.getElementById('modalCourse').innerText = courseYr || 'N/A';
+                    
+                    // Format Birthdate
+                    let formattedDate = 'N/A';
+                    if (data.birthdate) {
+                        let datePart = String(data.birthdate).split('T')[0];
+                        let d = new Date(datePart);
+                        formattedDate = (!isNaN(d.getTime())) ? d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : datePart;
+                    }
+                    document.getElementById('modalBirthdate').innerText = formattedDate;
+                    
+                    // Format Address
+                    let addr = data.address || '';
+                    if (data.city_municipality) addr += (addr ? ', ' : '') + data.city_municipality;
+                    if (data.province_state) addr += (addr ? ', ' : '') + data.province_state;
+                    document.getElementById('modalAddress').innerText = addr || 'N/A';
+
+                    // Populate Image
+                    if (data.picture_path) {
+                        document.getElementById('modalPicture').src = `/storage/${data.picture_path}`;
+                    } else {
+                        // Generate a placeholder avatar using ui-avatars API
+                        document.getElementById('modalPicture').src = `https://ui-avatars.com/api/?name=${data.first_name || 'User'}+${data.last_name || ''}&background=e8f5e9&color=2e4e1f&size=150`;
+                    }
+
+                    // Show content
+                    loadingEl.classList.add('d-none');
+                    contentEl.classList.remove('d-none');
+                })
+                .catch(error => {
+                    console.error('Error fetching profile:', error);
+                    loadingEl.innerHTML = `
+                        <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+                        <p class="text-danger fs-5 fw-bold">Failed to load profile.</p>
+                        <p class="text-muted small">The database record might be incomplete or missing.</p>
+                    `;
+                });
+            });
+        }
     });
 </script>
 @endsection

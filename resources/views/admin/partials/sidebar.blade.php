@@ -10,7 +10,7 @@
                             ->count();
 
         $admin_links = [
-            'general' => ['name' => 'General Information', 'icon' => 'fas fa-info-circle'],
+            'general' => ['name' => 'Admin Settings', 'icon' => 'fas fa-info-circle'],
             'users'   => ['name' => 'Users & Security', 'icon' => 'fas fa-user-shield'],
             
             // --- FUTURE LINKS KEPT FOR REFERENCE ---
